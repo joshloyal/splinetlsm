@@ -25,7 +25,7 @@ namespace splinetlsm {
         uint n_nodes = Y.n_cols;
 
         // initialize new natural parameters
-        new_natural_params = NaturalParams(config_);
+        NaturalParams new_natural_params(config_);
         
         // update step size
         iter_idx_ += 1
@@ -188,18 +188,21 @@ namespace splinetlsm {
         
         // set random seed
         arma_rng::set_seed(random_state); 
-
-        config = ModelConfig(Y, B, X, n_features, penalty_order, 
+        
+        // store various hyperparameters and statistics
+        ModelConfig config(Y, B, X, n_features, penalty_order, 
             coefs_penalty_order, rate_prior, shape_prior,
-            coefs_rate_prior, coefs_shape_prior, mgp_a1, mgp_a2,
-            tau_prec, coefs_tau_prec);
-
-        svi = SVI(config, step_size_delay, step_size_power, tol);
+            coefs_rate_prior, coefs_shape_prior, 
+            mgp_a1, mgp_a2, tau_prec, coefs_tau_prec);
+        
+        // initialize SVI algorithm
+        SVI svi(config, step_size_delay, step_size_power, tol);
         
         // initial parameter values
-        natural_params = NaturalParams(config);
-        params = ModelParams(natural_params);
+        NaturalParams natural_params(config);
+        ModelParams params(natural_params);
         
+        // run stochastic gradient descent
         for (uint iter = 0; iter < max_iter; iter++) {
             auto [natural_params, params] = svi.update(
                     Y, B, X, time_points, natural_params, params);
