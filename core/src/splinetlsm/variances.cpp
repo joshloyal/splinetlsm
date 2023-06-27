@@ -41,6 +41,9 @@ namespace splinetlsm {
             arma::vec& w_prec, 
             double tau_prec, arma::mat& diff_matrix, 
             arma::mat& penalty_matrix, uint penalty_order) {
+        
+        uint n_nodes = W.n_rows;
+        uint n_features = W.n_slices;
 
         double grad_d = 2.;
         for (uint l = h; l < n_features; ++l) {

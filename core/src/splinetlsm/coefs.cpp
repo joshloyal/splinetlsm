@@ -25,7 +25,7 @@ namespace splinetlsm {
             uint time_index = sample_info.time_indices(t);
             arma::vec coefs = moments.coefs.col(t);
             
-            for (uint i = 0; i < n_nodes; ++i) {
+            for (uint i = 0; i < Y.n_cols; ++i) {
                 arma::vec omega_it = omega(t, i);
                 arma::vec mu_i = moments.U.tube(i, t);
                 double degree = sample_info.degree(t, i);
@@ -59,7 +59,7 @@ namespace splinetlsm {
         }
         
         // re-weight sample for sampling of time points
-        double time_weight = Y.n_elem / sample_info.time_indices().n_elem;
+        double time_weight = Y.n_elem / sample_info.time_indices.n_elem;
         grad_mean *= 0.5 * time_weight;
         grad_prec *= 0.5 * time_weight;
 
@@ -68,6 +68,5 @@ namespace splinetlsm {
         
         return {grad_mean, grad_prec};
     }
-
-    
+ 
 }
