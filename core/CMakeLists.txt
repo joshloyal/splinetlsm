@@ -68,9 +68,4 @@ ADD_CUSTOM_TARGET(release
 ## ======================================================================================##
 add_executable(splinetlsm ${SOURCES})
 #target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} Boost::filesystem OpenMP::OpenMP_CXX Catch2::Catch2WithMain)
-#target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} Boost::filesystem Catch2::Catch2WithMain)
 target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
-
-# These tests can use the Catch2-provided main
-#add_executable(tests test.cpp)
-#target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)

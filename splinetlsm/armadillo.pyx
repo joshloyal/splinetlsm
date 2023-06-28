@@ -59,7 +59,7 @@ cdef np.ndarray[np.int_t, ndim=2] to_uint_ndarray(const umat& arma_mat):
 
     # allocate memory for the new np.array
     np_array = np.empty((n_rows, n_cols),
-                        dtype=np.int,
+                        dtype=int,
                         order="F")
 
     # copy data from the arma::mat to the numpy array
@@ -113,7 +113,7 @@ cdef np.ndarray[np.int_t, ndim=1] to_1d_int_ndarray(const ivec& arma_vec):
     cdef np.ndarray[np.int_t, ndim=1] np_array
 
     # allocate memory for the new np.array
-    np_array = np.empty(n_elem, dtype=np.int)
+    np_array = np.empty(n_elem, dtype=int)
 
     # copy data from the arma::vec to the numpy array
     vec_ptr = arma_vec.memptr()
@@ -145,7 +145,7 @@ cdef np.ndarray[np.int_t, ndim=1] to_1d_uint_ndarray(const uvec& arma_vec):
     cdef np.ndarray[np.int_t, ndim=1] np_array
 
     # allocate memory for the new np.array
-    np_array = np.empty(n_elem, dtype=np.int)
+    np_array = np.empty(n_elem, dtype=int)
 
     # copy data from the arma::vec to the numpy array
     vec_ptr = arma_vec.memptr()

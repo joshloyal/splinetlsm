@@ -7,7 +7,7 @@ namespace splinetlsm {
     public:
         NonEdgeSampler(double proportion);
         std::tuple<arma::field<arma::uvec>, arma::mat, arma::mat> 
-            draw(const sp_cube& Y, arma::uvec& time_indices);
+            draw(const sp_cube& Y, const arma::uvec& time_indices);
     private:
         double proportion_;
     };

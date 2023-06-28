@@ -7,16 +7,26 @@ namespace splinetlsm {
             W(config.n_nodes, config.n_knots, config.n_features, arma::fill::randn), 
             W_sigma(config.n_features),
             W_coefs(config.n_knots, config.n_covariates, arma::fill::randn),
-            W_coefs_sigma(config.n_knots, config.n_knots, config.n_covariates,  arma::fill::ones),
+            W_coefs_sigma(config.n_knots, config.n_knots, config.n_covariates),
             b(config.n_nodes, arma::fill::ones),
             b_coefs(config.n_covariates, arma::fill::ones),
             mgp_rate(config.n_features, arma::fill::ones),
             mgp_shape(config.n_features) {
         
-        //for (uint h = 0; h < config.n_features; ++h) {
-        //    W_sigma(h) = arma::cube(config.n_nodes, config.n_knots, config.n_knots);
-        //}
-        W_sigma.fill(arma::cube(config.n_knots, config.n_knots, config.n_nodes, arma::fill::randn));
+        // initialize covariances to the identity
+        W_sigma.fill(arma::cube(config.n_knots, config.n_knots, config.n_nodes, 
+            arma::fill::zeros));
+        for (uint h = 0; h < config.n_features; ++h) {
+            for (uint i = 0; i < config.n_nodes; ++i) {
+                W_sigma(h).slice(i) = arma::mat(
+                        config.n_knots, config.n_knots, arma::fill::eye);
+            }
+        }
+
+        for (uint k = 0; k < config.n_covariates; ++k) {
+            W_coefs_sigma.slice(k) = arma::eye(config.n_knots, config.n_knots);
+        }
+
 
         // GIG parameters
         a = config.rate_prior;
@@ -74,29 +84,21 @@ namespace splinetlsm {
         W_sigma.fill(arma::cube(arma::size(natural_params.W_sigma(0))));
         for (uint i = 0; i < n_nodes; ++i) {
             for (uint h = 0; h < n_features; ++h) {
-                W_sigma(h).slice(i) = inv_sympd(natural_params.W_sigma(h).slice(i));
-                W.slice(h).row(i) = W_sigma(h).slice(i) * natural_params.W.slice(h).row(i);
+                W_sigma(h).slice(i) = inv_sympd(
+                        natural_params.W_sigma(h).slice(i));
+                W.slice(h).row(i) = (W_sigma(h).slice(i) * 
+                        natural_params.W.slice(h).row(i).t()).t();
             }
         }
 
         // coefficient weights
         for (uint k = 0; k < n_covariates; ++k) {
-            W_coefs_sigma.slice(k) = inv_sympd(natural_params.W_coefs_sigma.slice(k));
-            W_coefs.col(k) = W_coefs_sigma.slice(k) * natural_params.W_coefs.col(k);
+            W_coefs_sigma.slice(k) = inv_sympd(
+                natural_params.W_coefs_sigma.slice(k));
+            W_coefs.col(k) = (W_coefs_sigma.slice(k) * 
+                natural_params.W_coefs.col(k));
         }
-        
-        // variance parameters
-        //a = natural_parameters.a;
-        //b = natural_params.b;
-        //p = natural_params.p;
-
-        //a_coefs = natural_params.a_coefs;
-        //b_coefs = natural_params.b_coefs;
-        //p_coefs = natural_params.p_coefs;
-        
-        //mgp_shape = natural_params.mgp_shape;
-        //mgp_rate = natural_params.mgp_rate;
-        
+     
     }
     
     Params::Params(ModelConfig& config) : 

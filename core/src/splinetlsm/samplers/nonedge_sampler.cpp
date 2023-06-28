@@ -9,12 +9,10 @@ namespace splinetlsm {
         std::vector<arma::uword> edge_ids;
 
         // loop through columns (faster for csc format)
-        auto start = Y.begin_col(col_id);
-        auto end = Y.end_col(col_id);
-        for (auto j = start; j != end; ++j) {
-            edge_ids.push_back(j.col());
+        for (auto j = Y.begin_col(col_id); j != Y.end_col(col_id); ++j) {
+            edge_ids.push_back(j.row());
         }
-        
+ 
         // hack to avoid picking self-loops when sampling non-edges
         edge_ids.push_back(col_id);
 
@@ -30,19 +28,18 @@ namespace splinetlsm {
         proportion_(proportion) {}
 
     std::tuple<arma::field<arma::uvec>, arma::mat, arma::mat>
-    NonEdgeSampler::draw(
-            const sp_cube& Y, arma::uvec& time_indices) {
+    NonEdgeSampler::draw(const sp_cube& Y, const arma::uvec& time_indices) {
         uint n_time_steps = time_indices.n_elem;
-        uint n_nodes = Y.n_slices;
+        uint n_nodes = Y(0).n_rows;
 
         arma::field<arma::uvec> dyad_subsamples(n_time_steps, n_nodes); 
         arma::mat degrees(n_time_steps, n_nodes);
         arma::mat weights(n_time_steps, n_nodes);
-        for (auto t : time_indices) {
+        for (uint t = 0; t < n_time_steps; ++t) {
             for (uint i = 0; i < n_nodes; ++i) {
              
                 // edges
-                arma::uvec edge_ids = find_edge_ids(Y(t), i);
+                arma::uvec edge_ids = find_edge_ids(Y(time_indices(t)), i);
                 int n_edges = edge_ids.n_rows - 1;  // do not count self-loops
                 degrees(t, i) = n_edges;
 
@@ -54,11 +51,11 @@ namespace splinetlsm {
                 
                 // uniformely sample non-edges
                 arma::uvec subsample = nonedge_ids.elem(
-                        arma::randperm(nonedge_ids.size(), n_nonedges));
+                    arma::randperm(nonedge_ids.n_elem, n_nonedges));
 
                 // store combined result
                 dyad_subsamples(t, i) = join_cols(edge_ids, subsample);
-                weights(t, i) = nonedge_ids.size() / n_nonedges;
+                weights(t, i) = nonedge_ids.n_elem / n_nonedges;
             }
         }
         

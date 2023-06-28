@@ -17,6 +17,7 @@ VERSION = __version__
 
 # armadillo header-files included with the package
 ARMADILLO_INC = os.path.join(HERE, 'third-party')
+BOOST_INC = "/opt/homebrew/include"
 
 MOD_NAMES = [
     'splinetlsm.armadillo',
@@ -107,7 +108,7 @@ def cythonize_source(source, cython_cov=False):
 
 def make_extension(ext_name, macros=[]):
     ext_path = ext_name.replace('.', os.path.sep) + '.cpp'
-    include_dirs = [numpy.get_include(), ARMADILLO_INC, ".", "./src"]
+    include_dirs = [numpy.get_include(), ARMADILLO_INC, BOOST_INC, ".", "./src"]
     library_dirs = ['/usr/lib']
     if get_include():
         include_dirs = [get_include()] + include_dirs

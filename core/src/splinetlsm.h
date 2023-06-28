@@ -1,7 +1,6 @@
 #pragma once
 
-#define ARMA_DONT_PRINT_ERRORS
-//#define ARMA_DONT_USE_WRAPPER
+//#define ARMA_DONT_PRINT_ERRORS
 
 #include <armadillo>
 
@@ -19,3 +18,5 @@
 #include "splinetlsm/coefs.h"
 #include "splinetlsm/variances.h"
 #include "splinetlsm/svi.h"
+
+#include "splinetlsm/utils.h"

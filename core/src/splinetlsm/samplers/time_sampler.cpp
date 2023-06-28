@@ -11,9 +11,9 @@ namespace splinetlsm {
 
     //std::pair<arma::uvec, arma::uvec>
     arma::uvec TimeSampler::draw(const arma::vec& time_points) {
-        // uniformely sample time points
+        // uniformly sample time points
         
-        uint n_time_steps = time_points.size();
+        uint n_time_steps = time_points.n_elem;
         if (n_samples_ >= n_time_steps) {
             return arma::regspace<arma::uvec>(0, n_time_steps - 1);
         }
@@ -23,6 +23,6 @@ namespace splinetlsm {
         //return { time_subsample, time_indices };
         
         // XXX: sort is for convenience but should we remove it?
-        return arma::sort(arma::randperm(time_points.size(), n_samples_));
+        return arma::sort(arma::randperm(n_time_steps, n_samples_));
     }
 }
