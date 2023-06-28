@@ -6,21 +6,19 @@ namespace splinetlsm {
     struct SampleInfo {
         arma::uvec time_indices;
         arma::field<arma::uvec> dyad_indices;
-        arma::field<arma::uvec> degrees;
-        arma::field<arma::vec> weights;
+        arma::mat degrees;
+        arma::mat weights;
     };
 
 
     class DyadSampler {
     public:
         DyadSampler(double nonedge_proportion, uint n_time_steps);
-        SampleInfo draw(const arma::sp_mat& Y, arma::uvec& time_points);
-    private:
-        double nonedge_proportion_;
-        double n_time_steps_;
+        SampleInfo draw(const sp_cube& Y, const arma::vec& time_points);
 
-        NonEdgeSampler nonedge_sampler_;
+    private:
         TimeSampler time_sampler_;
+        NonEdgeSampler nonedge_sampler_;
     };
 
 }

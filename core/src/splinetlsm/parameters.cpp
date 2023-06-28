@@ -1,22 +1,22 @@
-#include "splinelsm.h"
+#include "splinetlsm.h"
 
 
 namespace splinetlsm {
     
     NaturalParams::NaturalParams(ModelConfig& config) : 
             W(config.n_nodes, config.n_knots, config.n_features, arma::fill::randn), 
-            W_sigma(config.n_features, arma::fill::ones),
-            W_coefs(config.n_covariates, config.n_knots, arma::fill::randn),
-            W_coefs_sigma(config.n_covariates, config.n_knots, config.n_knots, arma::fill::ones),
+            W_sigma(config.n_features),
+            W_coefs(config.n_knots, config.n_covariates, arma::fill::randn),
+            W_coefs_sigma(config.n_knots, config.n_knots, config.n_covariates,  arma::fill::ones),
             b(config.n_nodes, arma::fill::ones),
-            b_coefs(config.n_covariates, arma::fill:ones),
+            b_coefs(config.n_covariates, arma::fill::ones),
             mgp_rate(config.n_features, arma::fill::ones),
             mgp_shape(config.n_features) {
         
         //for (uint h = 0; h < config.n_features; ++h) {
         //    W_sigma(h) = arma::cube(config.n_nodes, config.n_knots, config.n_knots);
         //}
-        W_sigma.fill(arma::cube(config.n_nodes, config.n_knots, config.n_knots, arma::fill:randn));
+        W_sigma.fill(arma::cube(config.n_knots, config.n_knots, config.n_nodes, arma::fill::randn));
 
         // GIG parameters
         a = config.rate_prior;
@@ -35,7 +35,7 @@ namespace splinetlsm {
 
     }
     
-    NaturalParams::operator-(NaturalParams const& params) {
+    double NaturalParams::operator-(NaturalParams const& params) {
         double res = 0.;
 
         res += arma::accu(arma::abs(W - params.W));
@@ -54,31 +54,35 @@ namespace splinetlsm {
 
     ModelParams::ModelParams(NaturalParams& natural_params) : 
             W(arma::size(natural_params.W)), 
-            W_sigma(natural_params.n_elem),
+            W_sigma(natural_params.W_sigma.n_elem),
             W_coefs(arma::size(natural_params.W_coefs)),
             W_coefs_sigma(arma::size(natural_params.W_coefs_sigma)),
-            a(natural_params.a),
             b(natural_params.b),
-            p(natural_params.p)
-            a_coefs(natural_params.a_coefs),
             b_coefs(natural_params.b_coefs),
-            p_coefs(natural_params.p_coefs),
             mgp_rate(natural_params.mgp_rate),
+            a(natural_params.a),
+            p(natural_params.p),
+            a_coefs(natural_params.a_coefs),
+            p_coefs(natural_params.p_coefs),
             mgp_shape(natural_params.mgp_shape) {
         
+        uint n_nodes = W.n_rows;
+        uint n_features = W.n_slices;
+        uint n_covariates = W_coefs.n_cols;
+
         // node weights
-        W_sigma.fill(arma::size(natural_params.W(0)));
+        W_sigma.fill(arma::cube(arma::size(natural_params.W_sigma(0))));
         for (uint i = 0; i < n_nodes; ++i) {
             for (uint h = 0; h < n_features; ++h) {
-                W_sigma(d).row(i) = inv_sympd(natural_params.W_sigma(d).row(i));
-                W(i).col(h) = W_sigma(h).row(i) * nautral_params.W(i).col(h);
+                W_sigma(h).slice(i) = inv_sympd(natural_params.W_sigma(h).slice(i));
+                W.slice(h).row(i) = W_sigma(h).slice(i) * natural_params.W.slice(h).row(i);
             }
         }
 
         // coefficient weights
         for (uint k = 0; k < n_covariates; ++k) {
-            W_coefs_sigma.row(k) = inv_sympd(natural_params.W_coefs_sigma.row(k));
-            W_coefs.row(k) = W_coefs_sigma.row(k) * nautral_params.W_coefs.row(k).t();
+            W_coefs_sigma.slice(k) = inv_sympd(natural_params.W_coefs_sigma.slice(k));
+            W_coefs.col(k) = W_coefs_sigma.slice(k) * natural_params.W_coefs.col(k);
         }
         
         // variance parameters
