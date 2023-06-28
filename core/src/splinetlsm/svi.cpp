@@ -53,13 +53,16 @@ namespace splinetlsm {
         // update q(omega_ijt) for sampled dyads
         arma::field<arma::vec> omega(sample_info.time_indices.n_elem, n_nodes);
         for (uint t = 0; t < sample_info.time_indices.n_elem; ++t) {
+            // extract covariates at time t
+            arma::cube Xt = X(sample_info.time_indices(t));
+
             for (uint i = 0; i < n_nodes; ++i) {
                 arma::uvec dyads = sample_info.dyad_indices(t, i);
                 omega(t, i) = arma::vec(dyads.n_elem);
                 uint dyad_idx = 0;
                 for (auto j : dyads) {
                     omega(t, i)(dyad_idx) = calculate_omega(
-                            moments, X, i, j, t, sample_info);
+                            moments, Xt, i, j, t);
                     dyad_idx += 1;
                 }
             }

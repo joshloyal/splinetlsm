@@ -5,13 +5,13 @@
 
 namespace splinetlsm {
 
-    double calculate_omega(Moments& moments, const array4d& X, uint i, uint j, 
-            uint t, SampleInfo& sample_info) {
+    double calculate_omega(Moments& moments, const arma::cube& X, uint i, uint j, 
+            uint t) {
         
-        uint time_index = sample_info.time_indices(t);
+        //uint time_index = sample_info.time_indices(t);
 
         // extract necessary parameters
-        arma::vec x = X(time_index).tube(i, j);
+        arma::vec x = X.tube(i, j);
         arma::vec mu_i = moments.U.tube(i, t);
         arma::vec mu_j = moments.U.tube(j, t);
         arma::vec mu_coefs = moments.coefs.col(t);
