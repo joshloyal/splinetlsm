@@ -1,6 +1,7 @@
 #pragma once
 
 namespace splinetlsm {
+
     // natural parameters of the variational distribution
     class NaturalParams {
     public:
@@ -59,6 +60,16 @@ namespace splinetlsm {
         
         // MGP shape parameters
         arma::vec mgp_shape;
+    };
+    
+    class Params {
+    public:
+        Params(ModelConfig& config);
+        Params(NaturalParams& natural, ModelParams& model);
+
+    public:
+        NaturalParams natural;
+        ModelParams model;
     };
     
 }

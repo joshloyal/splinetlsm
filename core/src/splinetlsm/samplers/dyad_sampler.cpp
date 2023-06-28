@@ -18,13 +18,6 @@ namespace splinetlsm {
         auto [dyad_indices, degrees, weights] = nonedge_sampler_.draw(
                 Y, time_indices);
         
-        // create sample info struct
-        SampleInfo sample_info;
-        sample_info.time_indices = time_indices;
-        sample_info.dyad_indices = dyad_indices;
-        sample_info.degrees = degrees;
-        sample_info.weights = weights;
-
-        return sample_info;
+        return {time_indices, dyad_indices, degrees, weights};
     }
 }

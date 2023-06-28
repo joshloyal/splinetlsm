@@ -98,5 +98,11 @@ namespace splinetlsm {
         //mgp_rate = natural_params.mgp_rate;
         
     }
+    
+    Params::Params(ModelConfig& config) : 
+        natural(config), model(natural) {}
+
+    Params::Params(NaturalParams& natural, ModelParams& model) :
+        natural(natural), model(model) {}
 
 }

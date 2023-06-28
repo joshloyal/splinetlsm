@@ -5,7 +5,7 @@
 
 
 namespace splinetlsm {
-    
+     
     SVI::SVI(ModelConfig& config, double nonedge_proportion,
             uint n_time_steps,
             double step_size_delay, 
@@ -19,10 +19,9 @@ namespace splinetlsm {
         tol_(tol) {}
 
 
-    std::pair<NaturalParams, ModelParams>
+    Params
     SVI::update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
-            const arma::vec& time_points, NaturalParams& natural_params, 
-            ModelParams& params) {
+                const arma::vec& time_points, Params& params) {
         // Y : sparse csc cube of shape T x n x n
         // B : sparse csc matrix of shape L_M x T
         uint n_nodes = Y.n_cols;
@@ -46,7 +45,7 @@ namespace splinetlsm {
         arma::sp_mat B_sub = B.cols(sample_info.time_indices);
 
         // evaluate means and covariances at the sampled time points only
-        Moments moments = calculate_moments(params, B_sub);
+        Moments moments = calculate_moments(params.model, B_sub);
 
 
         //------- Optimize Local Variables ----------------------------------//
@@ -86,11 +85,11 @@ namespace splinetlsm {
                 
                 // take a gradient step
                 new_natural_params.W.slice(h).row(i) = (
-                        (1 - step_size) * natural_params.W.slice(h).row(i) + 
+                        (1 - step_size) * params.natural.W.slice(h).row(i) + 
                             step_size * grad_mean);
 
                 new_natural_params.W_sigma(h).slice(i) = (
-                        (1 - step_size) * natural_params.W_sigma(h).slice(i) + 
+                        (1 - step_size) * params.natural.W_sigma(h).slice(i) + 
                             step_size * grad_prec);
             }
         }
@@ -114,11 +113,11 @@ namespace splinetlsm {
                 
             // take a gradient step
             new_natural_params.W_coefs.col(k) = (
-                    (1 - step_size) * natural_params.W_coefs.col(k) + 
+                    (1 - step_size) * params.natural.W_coefs.col(k) + 
                         step_size * grad_mean);
 
             new_natural_params.W_coefs_sigma.slice(k) = (
-                    (1 - step_size) * natural_params.W_coefs_sigma.slice(k) +
+                    (1 - step_size) * params.natural.W_coefs_sigma.slice(k) +
                         step_size * grad_prec);
         }
         
@@ -127,22 +126,22 @@ namespace splinetlsm {
         // update node variances: q(sigma_i)
         for (uint i = 0; i < n_nodes; ++i) {
             double grad_b = calculate_node_variance_gradient(
-                params.W, params.W_sigma, moments.log_gamma,
+                params.model.W, params.model.W_sigma, moments.log_gamma,
                 config_.diff_matrix, config_.penalty_matrix, i);
 
             new_natural_params.b(i) = (
-                (1 - step_size) * natural_params.b(i) + step_size * grad_b);
+                (1 - step_size) * params.natural.b(i) + step_size * grad_b);
         }
 
         // update covariate variances: q(sigma_k)
         for (uint k = 0; k < config_.n_covariates; ++k) {
             double grad_b = calculate_coef_variance_gradient(
-                params.W_coefs, params.W_coefs_sigma,
+                params.model.W_coefs, params.model.W_coefs_sigma,
                 config_.coefs_diff_matrix, config_.coefs_penalty_matrix, k);
 
             
             new_natural_params.b_coefs(k) = (
-                (1 - step_size) * natural_params.b_coefs(k) + 
+                (1 - step_size) * params.natural.b_coefs(k) + 
                     step_size * grad_b);
         }
 
@@ -150,13 +149,13 @@ namespace splinetlsm {
         for (uint h = 0; h < config_.n_features; ++h) {
 
             double grad_rate = calculate_mgp_variance_gradient(
-                params.W, params.W_sigma, params.mgp_rate, params.mgp_shape, 
-                moments.log_gamma, moments.w_prec, 
+                params.model.W, params.model.W_sigma, params.model.mgp_rate, 
+                params.model.mgp_shape, moments.log_gamma, moments.w_prec, 
                 config_.tau_prec, config_.diff_matrix,
                 config_.penalty_matrix, config_.penalty_order, h);
 
             new_natural_params.mgp_rate(h) = (
-                (1 - step_size) * natural_params.mgp_rate(h) + 
+                (1 - step_size) * params.natural.mgp_rate(h) + 
                     step_size * grad_rate);
         }
 
@@ -164,12 +163,11 @@ namespace splinetlsm {
         // transform natural parameters to standard parameters
         ModelParams new_params(new_natural_params);
 
-
         //------- Check for Convergence -------------------------------------//
 
         // XXX: - overloaded to calculate the absolute value 
         //      of the difference of natural parameters
-        double natural_params_diff = new_natural_params - natural_params;
+        double natural_params_diff = new_natural_params - params.natural;
         if (natural_params_diff < tol_) {
             converged = true;
         }
@@ -204,16 +202,15 @@ namespace splinetlsm {
                 step_size_delay, step_size_power, tol);
         
         // initial parameter values
-        NaturalParams natural_params(config);
-        ModelParams params(natural_params);
-        
+        Params params(config);
+ 
         // run stochastic gradient descent
         for (uint iter = 0; iter < max_iter; iter++) {
-            auto [new_natural_params, new_params] = svi.update(
-                    Y, B, X, time_points, natural_params, params);
+            Params params = svi.update(Y, B, X, time_points, params);
             
-            natural_params = new_natural_params;
-            params = new_params;
+            //params = new_params; 
+            //natural_params = new_natural_params;
+            //params = new_params;
 
             // check for convergence
             if (svi.converged) {
@@ -221,6 +218,6 @@ namespace splinetlsm {
             }
         }
         
-        return params;
+        return params.model;
     }
 }
