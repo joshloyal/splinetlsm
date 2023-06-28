@@ -40,9 +40,9 @@ namespace splinetlsm {
              
                 // edges
                 arma::uvec edge_ids = find_edge_ids(Y(time_indices(t)), i);
-                int n_edges = edge_ids.n_rows - 1;  // do not count self-loops
+                uint n_edges = edge_ids.n_rows - 1;  // do not count self-loops
                 degrees(t, i) = n_edges;
-
+    
                 // non-edges
                 int n_nonedges = get_num_nonedges(n_nodes, n_edges, proportion_);
                 arma::uvec nonedge_ids = arma::regspace<arma::uvec>(
@@ -55,7 +55,8 @@ namespace splinetlsm {
 
                 // store combined result
                 dyad_subsamples(t, i) = join_cols(edge_ids, subsample);
-                weights(t, i) = nonedge_ids.n_elem / n_nonedges;
+                weights(t, i) = (n_nonedges > 0. ? 
+                    (double) nonedge_ids.n_elem / n_nonedges : 0.);
             }
         }
         

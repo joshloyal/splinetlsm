@@ -58,7 +58,7 @@ namespace splinetlsm {
         }
         
         // re-weight sample for sampling of time points
-        double time_weight = Y.n_elem / sample_info.time_indices.n_elem;
+        double time_weight = (double) Y.n_elem / sample_info.time_indices.n_elem;
         grad_mean *= time_weight;
         grad_prec *= time_weight;
 
