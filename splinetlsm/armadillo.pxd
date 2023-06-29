@@ -19,6 +19,25 @@ ctypedef fused INDEX_T:
 cdef extern from "armadillo" namespace "arma" nogil:
     ctypedef unsigned int uword
     ctypedef int sword
+    
+    cdef cppclass field[T]:
+        field() nogil
+        field(uword i) nogil
+
+        T& operator()(const uword i) nogil
+        const T& operator()(const uword i) const
+
+    cdef cppclass cube:
+        cube() nogil
+        cube(double * aux_mem, int n_rows, int n_cols, int n_slices, 
+             bool copy_aux_mem, bool strict) nogil
+
+        double * memptr() nogil
+        
+        int n_rows
+        int n_cols
+        int n_slices
+        int n_elem
 
     cdef cppclass mat:
         # wrapper for arma::mat
@@ -111,8 +130,10 @@ cdef uvec to_arma_uvec(np.ndarray[INDEX_T, ndim=1] np_array)
 cdef np.ndarray[np.int_t, ndim=1] to_1d_uint_ndarray(const uvec& arma_vec)
 
 # sparse matrices
-#cdef sp_mat to_arma_csc(np.ndarray[INDEX_T, ndim=1] indices,
-#                        np.ndarray[INDEX_T, ndim=1] indptr,
-#                        np.ndarray[np.double_t, ndim=1] data,
-#                        int n_rows, int n_cols)
 cdef sp_mat to_arma_csc(m)
+
+# convert to a numpy ndarray to an arma::cube
+cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array)
+
+# convert from an arma::cube to a numpy ndarray
+cdef np.ndarray[np.double_t, ndim=3] to_3d_ndarray(const cube& arma_cube)

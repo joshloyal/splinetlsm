@@ -7,14 +7,11 @@ namespace splinetlsm {
     public:
         SVI(ModelConfig& config, double nonedge_proporition=5, 
                 uint n_time_steps=10, double step_size_delay=1, 
-                double step_size_power=0.75, double tol=0.001);
+                double step_size_power=0.75);
        
         //std::pair<NaturalParams, ModelParams> 
         Params update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X, 
             const arma::vec& time_points, Params& params);
-    
-    public:
-        bool converged;
         
     private:
         ModelConfig config_;
@@ -22,7 +19,6 @@ namespace splinetlsm {
         uint iter_idx_;
         double step_size_delay_;
         double step_size_power_;
-        double tol_;
     };
     
     ModelParams optimize_elbo(

@@ -19,4 +19,4 @@
 #include "splinetlsm/variances.h"
 #include "splinetlsm/svi.h"
 
-#include "splinetlsm/utils.h"
+#include "splinetlsm/wrapper_utils.h"

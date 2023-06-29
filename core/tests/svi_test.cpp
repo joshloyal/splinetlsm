@@ -56,7 +56,6 @@ TEST_CASE("Optimize ELBO", "[svi]") {
     auto [Y, B, X, time_points] = splinetlsm::load_dynamic_network(
             n_nodes, n_time_points, n_covariates, random_state);
 
-
-    splinetlsm::optimize_elbo(Y, B, X, time_points);
-    
+    splinetlsm::ModelParams params = splinetlsm::optimize_elbo(Y, B, X, time_points);
+ 
 }

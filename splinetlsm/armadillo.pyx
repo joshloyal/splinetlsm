@@ -156,11 +156,6 @@ cdef np.ndarray[np.int_t, ndim=1] to_1d_uint_ndarray(const uvec& arma_vec):
     return np_array
 
 
-#cdef sp_mat to_arma_csc(np.ndarray[INDEX_T, ndim=1] indices,
-#                        np.ndarray[INDEX_T, ndim=1] indptr,
-#                        np.ndarray[np.double_t, ndim=1] data,
-#                        int n_rows, int n_cols):
-
 cdef sp_mat to_arma_csc(csc_mat):
     # extract csc information
     # XXX: For some reason we need to convert to int64. Why?!
@@ -168,7 +163,7 @@ cdef sp_mat to_arma_csc(csc_mat):
     cdef np.ndarray[np.int64_t, ndim=1] indptr = csc_mat.indptr.astype('int64')
     cdef np.ndarray[np.double_t, ndim=1] data = csc_mat.data
     cdef int n_rows = csc_mat.shape[0]
-    cdef int n_cols = csc_mat.shape[0]
+    cdef int n_cols = csc_mat.shape[1]
     
     # convert to armadillo data structures
     cdef uvec rowind = to_arma_uvec(indices)
@@ -176,3 +171,43 @@ cdef sp_mat to_arma_csc(csc_mat):
     cdef vec values = to_arma_vec(data)
     
     return sp_mat(rowind, colptr, values, n_rows, n_cols, True)
+
+
+cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array):
+    """Converts a numpy ndarray to an arma::cube. A copy of the array is made
+    if it either does not own its data or that data is stored in
+    c-ordered format. Note that c-ordered is the default format
+    for numpy arrays.
+    """
+    if np_array.flags.c_contiguous or not np_array.flags.owndata:
+        np_array = np_array.copy(order='F')
+
+    return cube(<double*>np_array.data,
+               np_array.shape[0], np_array.shape[1], np_array.shape[2], 
+               False, True)
+
+
+cdef np.ndarray[np.double_t, ndim=3] to_3d_ndarray(const cube& arma_cube):
+    """Converts an arma::cube to a numpy ndarray. Currently, a
+    copy is always made.
+    """
+    cdef int i = 0
+    cdef n_rows = arma_cube.n_rows
+    cdef n_cols = arma_cube.n_cols
+    cdef n_slices = arma_cube.n_slices
+    cdef const double* cube_ptr
+    cdef double* np_ptr
+    cdef np.ndarray[np.double_t, ndim=3] np_array
+
+    # allocate memory for the new np.array
+    np_array = np.empty((n_rows, n_cols, n_slices),
+                        dtype=np.double,
+                        order="F")
+
+    # copy data from the arma::cube to the numpy array
+    cube_ptr = arma_cube.memptr()
+    np_ptr = <double*> np_array.data
+    for i in range(n_rows * n_cols * n_slices):
+        np_ptr[i] = cube_ptr[i]
+
+    return np_array

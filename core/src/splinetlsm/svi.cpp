@@ -9,14 +9,12 @@ namespace splinetlsm {
     SVI::SVI(ModelConfig& config, double nonedge_proportion,
             uint n_time_steps,
             double step_size_delay, 
-            double step_size_power, double tol) :  
-        converged(false),
+            double step_size_power) :  
         config_(config),
         dyad_sampler_(nonedge_proportion, n_time_steps),
         iter_idx_(0), 
         step_size_delay_(step_size_delay), 
-        step_size_power_(step_size_power), 
-        tol_(tol) {}
+        step_size_power_(step_size_power) {}
 
 
     Params
@@ -138,19 +136,9 @@ namespace splinetlsm {
                 (1 - step_size) * params.natural.mgp_rate(h) + 
                     step_size * grad_rate);
         }
-
-        
+ 
         // transform natural parameters to standard parameters
         ModelParams new_params(new_natural_params);
-
-        //------- Check for Convergence -------------------------------------//
-
-        // XXX: - overloaded to calculate the absolute value 
-        //      of the difference of natural parameters
-        double natural_params_diff = new_natural_params - params.natural;
-        if (natural_params_diff < tol_) {
-            converged = true;
-        }
 
         return {new_natural_params, new_params};
     }
@@ -179,21 +167,26 @@ namespace splinetlsm {
         
         // initialize SVI algorithm
         SVI svi(config, nonedge_proportion, n_time_steps, 
-                step_size_delay, step_size_power, tol);
+                step_size_delay, step_size_power);
         
         // initial parameter values
         Params params(config);
         
         // run stochastic gradient descent
         for (uint iter = 0; iter < max_iter; ++iter) {
-            Params new_params = svi.update(Y, B, X, time_points, params);
-            
-            Params params = new_params;
-
+            Params new_params = svi.update(Y, B, X, time_points, params);            
+        
             // check for convergence
-            if (svi.converged) {
+
+            // XXX: - overloaded to calculate the absolute value 
+            //      of the difference of natural parameters
+            double param_diff = new_params.natural - params.natural;
+            Params params = new_params;
+            
+            if (param_diff < tol) {
                 break;
             }
+
         }
         
         return params.model;
