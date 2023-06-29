@@ -25,12 +25,7 @@ TEST_CASE("Sampler", "[sampler]") {
     // include a fully-connected node
     Y(0).col(0) = arma::vec(n_nodes, arma::fill::ones);
     Y(0).row(0) = arma::rowvec(n_nodes, arma::fill::ones);
-    Y(0)(0, 0) = 0.;
-    
-    //Y(0).row(1) = arma::rowvec(n_nodes, arma::fill::zeros);
-    //Y(0).col(1) = arma::vec(n_nodes, arma::fill::zeros);
-    //Y(0)(1, 1) = 0.;
-    
+    Y(0)(0, 0) = 0.;  
 
     splinetlsm::DyadSampler dyad_sampler(proportion, n_time_samples);
     splinetlsm::SampleInfo sample_info = dyad_sampler.draw(Y, time_points);

@@ -10,8 +10,8 @@ namespace splinetlsm {
     arma::cube calculate_latent_position_means(
             const arma::cube& W, const arma::sp_mat& B) {
         
-        // not supported for sparse matrices...
-        //return W.each_slice() * B;
+        // XXX: not supported for sparse matrices...
+        // U = W.each_slice() * B;
         
         arma::cube U(W.n_rows, B.n_cols, W.n_slices);
         for (uint h = 0; h < W.n_slices; ++h) {
@@ -24,17 +24,17 @@ namespace splinetlsm {
     arma::cube calculate_latent_position_variances(
             const array4d& W_sigma, const arma::sp_mat& B) {
         uint n_features = W_sigma.n_elem;
-        uint n_nodes = W_sigma(0).n_rows;
+        uint n_nodes = W_sigma(0).n_slices;
         uint n_time_steps = B.n_cols;
 
         arma::cube U_sigma(n_nodes, n_time_steps, n_features);
-        for (int h = 0; h < n_features; ++h) {
+        for (uint h = 0; h < n_features; ++h) {
 
             // XXX: each_slice does not support sparse matrix operations
-            //U_sigma.slice(h) = arma::sum(
+            // U_sigma.slice(h) = arma::sum(
             //        (W_sigma(h).each_slice() * B).each_slice() % B, 0).t();
             
-            for (int i = 0; i < n_nodes; ++i) {
+            for (uint i = 0; i < n_nodes; ++i) {
                 U_sigma.slice(h).row(i) = arma::sum(
                         (W_sigma(h).slice(i) * B) % B, 0);
             }
@@ -55,7 +55,8 @@ namespace splinetlsm {
         uint n_time_steps = B.n_cols;
         
         // XXX: each_slice does not support sparse matrix apporations
-        // arma::sum((W_coefs_sigma.each_slice() * B).each_slice() % B, 0);
+        // coefs_sigma = arma::sum(
+        // (W_coefs_sigma.each_slice() * B).each_slice() % B, 0);
         
         arma::mat coefs_sigma(n_covariates, n_time_steps);
         for (uint k = 0; k < n_covariates; ++k) {
@@ -72,13 +73,10 @@ namespace splinetlsm {
 
         double theta = 0.;
         double eta_inv = 0.;
-        for (int i = 0; i < n_nodes; ++i) {
+        for (uint i = 0; i < n_nodes; ++i) {
             theta = std::sqrt(params.a * params.b(i));
             eta_inv = std::sqrt(params.a / params.b(i));
             
-            //w_prec(i) = (eta_inv * (
-            //    std::cyl_bessel_k(params.p + 1, theta) / 
-            //        std::cyl_bessel_k(params.p, theta)));
             w_prec(i) = (eta_inv * (
                 boost::math::cyl_bessel_k(params.p + 1, theta) / 
                     boost::math::cyl_bessel_k(params.p, theta)));
@@ -89,18 +87,15 @@ namespace splinetlsm {
     }
 
     arma::vec calculate_w_coefs_precisions(const ModelParams& params) {
-        uint n_covariates = params.W_coefs.n_rows;
+        uint n_covariates = params.W_coefs.n_cols;
         arma::vec w_coefs_prec(n_covariates);
 
         double theta = 0.;
         double eta_inv = 0.;
-        for (int k = 0; k < n_covariates; ++k) {
+        for (uint k = 0; k < n_covariates; ++k) {
             theta = std::sqrt(params.a_coefs * params.b_coefs(k));
             eta_inv = std::sqrt(params.a_coefs / params.b_coefs(k));
             
-            //w_coefs_prec(k) = (eta_inv * (
-            //    std::cyl_bessel_k(params.p_coefs + 1, theta) / 
-            //        std::cyl_bessel_k(params.p_coefs, theta)));
             w_coefs_prec(k) = (eta_inv * (
                 boost::math::cyl_bessel_k(params.p_coefs + 1, theta) / 
                     boost::math::cyl_bessel_k(params.p_coefs, theta)));
@@ -115,7 +110,8 @@ namespace splinetlsm {
         return arma::cumsum(log(shape) - log(rate));
     }
 
-    Moments calculate_moments(const ModelParams& params, const arma::sp_mat& B) {
+    Moments calculate_moments(
+            const ModelParams& params, const arma::sp_mat& B) {
         Moments moments;
         
         // moments of the latent positions
@@ -125,7 +121,8 @@ namespace splinetlsm {
 
         // moments of the time-varying coefficients
         moments.coefs = calculate_coefs_means(params.W_coefs, B);
-        moments.coefs_sigma = calculate_coefs_variances(params.W_coefs_sigma, B);
+        moments.coefs_sigma = calculate_coefs_variances(
+                params.W_coefs_sigma, B);
         
         // latent position precisions E_q[1/sigma_i^2]
         moments.w_prec = calculate_w_precisions(params);
