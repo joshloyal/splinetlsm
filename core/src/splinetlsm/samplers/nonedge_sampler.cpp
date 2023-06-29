@@ -1,10 +1,11 @@
+#include <algorithm>
 #include <vector>
 
 #include "splinetlsm.h"
 
 
 namespace splinetlsm {
-    
+        
     arma::uvec find_edge_ids(const arma::sp_mat& Y, uint col_id) {
         std::vector<arma::uword> edge_ids;
 
@@ -19,9 +20,20 @@ namespace splinetlsm {
         return arma::uvec(edge_ids);
     }
 
-    inline int get_num_nonedges(int n_nodes, int n_edges, double proportion) {
-        return ((n_nodes - 1 - n_edges) < std::floor(proportion * n_edges) ? 
-            (n_nodes - 1 - n_edges) : std::floor(proportion * n_edges));
+    int get_num_nonedges(int n_nodes, int n_edges, double proportion) {
+        uint max_degree = n_nodes - 1;
+        uint n_nonedges = max_degree - n_edges;
+        uint n_samples = std::floor(proportion * n_edges);
+
+        if (n_edges == max_degree) { 
+            // fully-connected node (no nonedges to sample)
+            return 0.;
+        } else if (n_edges == 0) {
+            // isolated node
+            return std::min(max_degree, N_NONEDGES_ISOLATED_NODES);
+        } else {
+            return n_nonedges <= n_samples ? n_nonedges : n_samples;
+        }
     }
 
     NonEdgeSampler::NonEdgeSampler(double proportion) :
@@ -54,7 +66,14 @@ namespace splinetlsm {
                     arma::randperm(nonedge_ids.n_elem, n_nonedges));
 
                 // store combined result
-                dyad_subsamples(t, i) = join_cols(edge_ids, subsample);
+                if (n_edges > 0) {
+                    // non-isolated nodes (remove self-loop)
+                    dyad_subsamples(t, i) = join_cols(
+                            edge_ids.rows(0, n_edges-1), subsample);
+                } else {
+                    dyad_subsamples(t, i) = subsample;
+                }
+
                 weights(t, i) = (n_nonedges > 0. ? 
                     (double) nonedge_ids.n_elem / n_nonedges : 0.);
             }

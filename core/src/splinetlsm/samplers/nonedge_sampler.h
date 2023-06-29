@@ -2,6 +2,8 @@
 
 
 namespace splinetlsm {
+    
+    const uint N_NONEDGES_ISOLATED_NODES = 10;
 
     class NonEdgeSampler {
     public:
