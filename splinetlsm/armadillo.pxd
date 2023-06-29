@@ -25,7 +25,9 @@ cdef extern from "armadillo" namespace "arma" nogil:
         field(uword i) nogil
 
         T& operator()(const uword i) nogil
-        const T& operator()(const uword i) const
+        #const T& operator()(const uword i) const
+        
+        int n_elem
 
     cdef cppclass cube:
         cube() nogil

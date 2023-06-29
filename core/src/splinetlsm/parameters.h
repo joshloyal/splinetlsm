@@ -36,6 +36,7 @@ namespace splinetlsm {
     // parameters of the variational distribution
     class ModelParams {
     public:
+        ModelParams();
         ModelParams(NaturalParams& natural_params);
     
     public:

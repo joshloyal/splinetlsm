@@ -6,6 +6,8 @@ cimport numpy as np
 
 from splinetlsm.armadillo cimport mat, sp_mat, field, cube, vec
 from splinetlsm.armadillo cimport to_arma_csc, to_arma_cube, to_arma_vec
+from splinetlsm.armadillo cimport to_ndarray, to_1d_ndarray, to_3d_ndarray
+
 
 cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
 
@@ -15,7 +17,7 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
 
     cdef cppclass ModelParams:
         cube W
-        array4d W_sigma
+        field[cube] W_sigma
         
         mat W_coefs
         cube W_coefs_sigma
@@ -36,8 +38,8 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
     cdef void set_4darray_value(field[cube]& Y, cube& B, uint index)
 
     cdef ModelParams optimize_elbo(
-        const sp_cube& Y, 
-        const sp_mat& B, const array4d& X, 
+        const field[sp_mat]& Y, 
+        const sp_mat& B, const field[cube]& X, 
         const vec& time_points, 
         uint n_features, 
         uint penalty_order, uint coefs_penalty_order,

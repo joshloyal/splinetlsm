@@ -100,6 +100,8 @@ namespace splinetlsm {
         }
      
     }
+
+    ModelParams::ModelParams() {}
     
     Params::Params(ModelConfig& config) : 
         natural(config), model(natural) {}
