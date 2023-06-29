@@ -16,6 +16,10 @@ namespace splinetlsm {
         arma::vec log_gamma;        // d-dimensional MGP log-precisions log(E[gamma_h])
     };
     
+    arma::mat calculate_prior_precision(double w_prec, ModelConfig& config);
+    arma::mat calculate_coefs_prior_precision(
+            double w_prec, ModelConfig& config);
+    
     arma::cube calculate_latent_position_means(
             const arma::cube& W, const arma::sp_mat& B);
     

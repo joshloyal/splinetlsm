@@ -5,8 +5,8 @@
 
 namespace splinetlsm {
 
-    double calculate_omega(Moments& moments, const arma::cube& X, uint i, uint j, 
-            uint t) {
+    double optimize_omega_single(const Moments& moments, const arma::cube& X, 
+            uint i, uint j, uint t) {
         
         // extract necessary parameters
         arma::vec x = X.tube(i, j);
@@ -32,5 +32,30 @@ namespace splinetlsm {
         double c = sqrt(c_sq); 
         return 0.5 * (1. / c) * tanh(0.5 * c);
     }
+    
+    arma::field<arma::vec> optimize_omega(
+            const Moments& moments, const array4d& X, 
+            const SampleInfo& sample_info) {
+        
+        uint n_nodes = X(0).n_rows;
 
+        arma::field<arma::vec> omega(sample_info.time_indices.n_elem, n_nodes);
+        for (uint t = 0; t < sample_info.time_indices.n_elem; ++t) {
+            // extract covariates at time t
+            arma::cube Xt = X(sample_info.time_indices(t));
+
+            for (uint i = 0; i < n_nodes; ++i) {
+                arma::uvec dyads = sample_info.dyad_indices(t, i);
+                omega(t, i) = arma::vec(dyads.n_elem);
+                uint dyad_idx = 0;
+                for (auto j : dyads) {
+                    omega(t, i)(dyad_idx) = optimize_omega_single(
+                            moments, Xt, i, j, t);
+                    dyad_idx += 1;
+                }
+            }
+        }
+
+        return omega;
+    }
 }

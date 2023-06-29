@@ -51,35 +51,17 @@ namespace splinetlsm {
         //------- Optimize Local Variables ----------------------------------//
         
         // update q(omega_ijt) for sampled dyads
-        arma::field<arma::vec> omega(sample_info.time_indices.n_elem, n_nodes);
-        for (uint t = 0; t < sample_info.time_indices.n_elem; ++t) {
-            // extract covariates at time t
-            arma::cube Xt = X(sample_info.time_indices(t));
-
-            for (uint i = 0; i < n_nodes; ++i) {
-                arma::uvec dyads = sample_info.dyad_indices(t, i);
-                omega(t, i) = arma::vec(dyads.n_elem);
-                uint dyad_idx = 0;
-                for (auto j : dyads) {
-                    omega(t, i)(dyad_idx) = calculate_omega(
-                            moments, Xt, i, j, t);
-                    dyad_idx += 1;
-                }
-            }
-        }
-       
+        arma::field<arma::vec> omega = optimize_omega(moments, X, sample_info);
+ 
 
         //------- Latent Position Spline Weights ----------------------------//
         
         // update latent position weights: q(w_ih)
-        arma::mat prior_precision;
         for (uint i = 0; i < n_nodes; i++) {
             
             // calculate prior precision matrix for node i (Omega_i)
-            prior_precision = moments.w_prec(i) * config_.penalty_matrix;
-            for (uint r = 0; r < config_.penalty_order; ++r) {
-                prior_precision(r, r) += config_.tau_prec;
-            }
+            arma::mat prior_precision = calculate_prior_precision(
+                    moments.w_prec(i), config_);
 
             for (uint h = 0; h < config_.n_features; h++) {
                 auto [grad_mean, grad_prec] = calculate_latent_position_gradients(
@@ -98,17 +80,13 @@ namespace splinetlsm {
         }
 
 
-        //------- Time-Varying Coefficient Spline Weig-----------------------//
+        //------- Time-Varying Coefficient Spline Weights -------------------//
         
         // update covariate weights: q(w_k)
         for (uint k = 0; k < config_.n_covariates; k++) {
             // calculate prior precision matrix for feature k
-            arma::mat prior_precision = (
-                moments.w_coefs_prec(k) * config_.coefs_penalty_matrix);
-
-            for (uint r = 0; r < config_.penalty_order; ++r) {
-                prior_precision(r, r) += config_.coefs_tau_prec;
-            }
+            arma::mat prior_precision = calculate_coefs_prior_precision(
+                    moments.w_coefs_prec(k), config_);
             
             auto [grad_mean, grad_prec] = calculate_coef_gradients(
                     Y, X, B_sub, moments, prior_precision, omega,

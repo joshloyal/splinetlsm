@@ -7,6 +7,25 @@
 
 namespace splinetlsm {
     
+    arma::mat calculate_prior_precision(double w_prec, ModelConfig& config) {
+        arma::mat prior_precision = w_prec * config.penalty_matrix;
+        for (uint r = 0; r < config.penalty_order; ++r) {
+            prior_precision(r, r) += config.tau_prec;
+        }
+
+        return prior_precision;
+    }
+    
+    arma::mat calculate_coefs_prior_precision(
+            double w_prec, ModelConfig& config) {
+        arma::mat prior_precision = w_prec * config.coefs_penalty_matrix;
+        for (uint r = 0; r < config.coefs_penalty_order; ++r) {
+            prior_precision(r, r) += config.coefs_tau_prec;
+        }
+
+        return prior_precision;
+    }
+
     arma::cube calculate_latent_position_means(
             const arma::cube& W, const arma::sp_mat& B) {
         

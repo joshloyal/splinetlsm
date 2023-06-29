@@ -11,21 +11,24 @@ namespace splinetlsm {
             arma::field<arma::vec>& omega, 
             SampleInfo& sample_info, uint k) {
         
+        uint n_nodes = Y(0).n_rows;
+        uint n_time_steps = sample_info.time_indices.n_elem;
+
         // initialize gradients
         arma::vec grad_mean(B.n_rows, arma::fill::zeros);
         arma::mat grad_prec(B.n_rows, B.n_rows, arma::fill::zeros);
 
-        for (uint t = 0; t < sample_info.time_indices.n_elem; ++t) {
+        for (uint t = 0; t < n_time_steps; ++t) {
             // reset indices and weights
             double time_weight_mean = 0; 
             double time_weight_prec = 0; 
-            uint dyad_idx = 0.;
             
             // necessary values to calculate gradients
             uint time_index = sample_info.time_indices(t);
             arma::vec coefs = moments.coefs.col(t);
             
-            for (uint i = 0; i < Y(0).n_cols; ++i) {
+            for (uint i = 0; i < n_nodes; ++i) {
+                uint dyad_idx = 0.;
                 arma::vec omega_it = omega(t, i);
                 arma::vec mu_i = moments.U.tube(i, t);
                 double degree = sample_info.degrees(t, i);
