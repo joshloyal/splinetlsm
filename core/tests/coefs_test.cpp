@@ -34,7 +34,7 @@ TEST_CASE("Coefficients", "[coefs]") {
     arma::field<arma::vec> omega = splinetlsm::optimize_omega(
             moments, X, sample_info);
 
-    // calculate latent position gradients
+    // calculate coefficient gradients
     arma::mat prior_precision = splinetlsm::calculate_coefs_prior_precision(
             moments.w_coefs_prec(0), config);
 

@@ -23,8 +23,8 @@ TEST_CASE("Config", "[config]") {
     REQUIRE(config.n_covariates == n_covariates);
     REQUIRE(config.n_knots == B.n_rows);
     
-    std::cout << config.diff_matrix << std::endl;
-    std::cout << config.penalty_matrix << std::endl;
-    std::cout << config.coefs_diff_matrix << std::endl;
-    std::cout << config.coefs_penalty_matrix << std::endl;
+    //std::cout << config.diff_matrix << std::endl;
+    //std::cout << config.penalty_matrix << std::endl;
+    //std::cout << config.coefs_diff_matrix << std::endl;
+    //std::cout << config.coefs_penalty_matrix << std::endl;
 }

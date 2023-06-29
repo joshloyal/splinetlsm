@@ -28,13 +28,13 @@ namespace splinetlsm {
     ModelParams optimize_elbo(
             const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
             const arma::vec& time_points, uint n_features=2,
-            uint penalty_order=1, uint coefs_penalty_order=1, 
+            uint penalty_order=1, uint coefs_penalty_order=2, 
             double rate_prior=2, double shape_prior=1,
             double coefs_rate_prior=2, double coefs_shape_prior=1,
             double mgp_a1=2, double mgp_a2=3,
             double tau_prec=0.01, double coefs_tau_prec=0.01,
-            double nonedge_proportion=5, uint n_time_steps=10,
+            double nonedge_proportion=5, uint n_time_steps=5,
             double step_size_delay=1, double step_size_power=0.75,
-            uint max_iter=100, int random_state=42);
+            uint max_iter=100, double tol=0.001, int random_state=42);
         
 }

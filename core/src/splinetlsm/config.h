@@ -6,7 +6,7 @@ namespace splinetlsm {
     public:
         ModelConfig(const sp_cube& Y, const arma::sp_mat& B, const array4d& X, 
             uint n_features=2, 
-            uint penalty_order=1, uint coefs_penalty_order=1, 
+            uint penalty_order=1, uint coefs_penalty_order=2, 
             double rate_prior=2, double shape_prior=1,
             double coefs_rate_prior=2, double coefs_shape_prior=1,
             double mgp_a1=2, double mgp_a2=3,

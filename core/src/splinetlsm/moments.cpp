@@ -137,7 +137,7 @@ namespace splinetlsm {
         moments.U = calculate_latent_position_means(params.W, B);
         moments.U_sigma = calculate_latent_position_variances(
                 params.W_sigma, B);
-
+        
         // moments of the time-varying coefficients
         moments.coefs = calculate_coefs_means(params.W_coefs, B);
         moments.coefs_sigma = calculate_coefs_variances(

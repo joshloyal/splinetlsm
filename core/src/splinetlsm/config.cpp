@@ -10,11 +10,6 @@ namespace splinetlsm {
             double coefs_rate_prior, double coefs_shape_prior,
             double mgp_a1, double mgp_a2,
             double tau_prec, double coefs_tau_prec) :
-            //uint n_features=2, uint penalty_order=1, uint coefs_penalty_order=1, 
-            //double rate_prior=2, double shape_prior=1,
-            //double coefs_rate_prior=2, double coefs_shape_prior=1,
-            //double mgp_a1=2, double mgp_a2=3,
-            //double tau_prec=0.01, double tau_coefs_prec=0.01) :
         n_nodes(Y(0).n_rows),
         n_features(n_features),
         n_covariates(X(0).n_slices),

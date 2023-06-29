@@ -62,7 +62,7 @@ namespace splinetlsm {
                            pow(W.slice(h)(i, r), 2) + W_sigma(h).slice(i)(r, r));
                 }
             }
-
+            
             double gamma_lh = exp(log_gamma(l) - (mgp_shape(h) - mgp_rate(h)));
             grad_d += gamma_lh * grad_lh;
         }

@@ -24,11 +24,11 @@ namespace splinetlsm {
                 const arma::vec& time_points, Params& params) {
         // Y : sparse csc cube of shape T x n x n
         // B : sparse csc matrix of shape L_M x T
-        uint n_nodes = Y.n_cols;
+        uint n_nodes = Y(0).n_cols;
 
         // initialize new natural parameters
         NaturalParams new_natural_params(config_);
-        
+
         // update step size
         iter_idx_ += 1;
         double step_size = 1. / pow(
@@ -43,10 +43,9 @@ namespace splinetlsm {
         // XXX: To access observation quantities (Y, X) for time sample number t
         //      use Y(time_indices(t))
         arma::sp_mat B_sub = B.cols(sample_info.time_indices);
-
+        
         // evaluate means and covariances at the sampled time points only
         Moments moments = calculate_moments(params.model, B_sub);
-
 
         //------- Optimize Local Variables ----------------------------------//
         
@@ -71,7 +70,7 @@ namespace splinetlsm {
                 // take a gradient step
                 new_natural_params.W.slice(h).row(i) = (
                         (1 - step_size) * params.natural.W.slice(h).row(i) + 
-                            step_size * grad_mean);
+                            step_size * grad_mean.t());
 
                 new_natural_params.W_sigma(h).slice(i) = (
                         (1 - step_size) * params.natural.W_sigma(h).slice(i) + 
@@ -184,14 +183,12 @@ namespace splinetlsm {
         
         // initial parameter values
         Params params(config);
- 
+        
         // run stochastic gradient descent
-        for (uint iter = 0; iter < max_iter; iter++) {
-            Params params = svi.update(Y, B, X, time_points, params);
+        for (uint iter = 0; iter < max_iter; ++iter) {
+            Params new_params = svi.update(Y, B, X, time_points, params);
             
-            //params = new_params; 
-            //natural_params = new_natural_params;
-            //params = new_params;
+            Params params = new_params;
 
             // check for convergence
             if (svi.converged) {
