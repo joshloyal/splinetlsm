@@ -62,7 +62,7 @@ def optimize_elbo_svi(Y, X, B, time_points,
     cdef vec time_points_arma = to_arma_vec(time_points)
     cdef ModelParams params
 
-    params = optimize_elbo(
+    result = optimize_elbo(
         Y_arma, B_arma, X_arma, time_points_arma,
         n_features=n_features, 
         penalty_order=penalty_order, coefs_penalty_order=coefs_penalty_order,
@@ -74,19 +74,25 @@ def optimize_elbo_svi(Y, X, B, time_points,
         step_size_delay=step_size_delay, step_size_power=step_size_power,
         max_iter=max_iter, tol=tol, random_state=random_state)
     
-    results = {
-        'W': to_3d_ndarray(params.W),
-        'W_sigma': to_4d_ndarray(params.W_sigma),
-        'W_coefs': to_ndarray(params.W_coefs),
-        'W_coefs_sigma': to_3d_ndarray(params.W_coefs_sigma),
-        'b': to_1d_ndarray(params.b),
-        'b_coefs': to_1d_ndarray(params.b_coefs),
-        'mgp_rate': to_1d_ndarray(params.mgp_rate),
-        'mgp_shape': to_1d_ndarray(params.mgp_shape),
-        'a': params.a,
-        'p': params.p,
-        'a_coefs': params.a_coefs,
-        'p_coefs': params.p_coefs
+    parameters = {
+        'W': to_3d_ndarray(result.params.W),
+        'W_sigma': to_4d_ndarray(result.params.W_sigma),
+        'W_coefs': to_ndarray(result.params.W_coefs),
+        'W_coefs_sigma': to_3d_ndarray(result.params.W_coefs_sigma),
+        'b': to_1d_ndarray(result.params.b),
+        'b_coefs': to_1d_ndarray(result.params.b_coefs),
+        'mgp_rate': to_1d_ndarray(result.params.mgp_rate),
+        'mgp_shape': to_1d_ndarray(result.params.mgp_shape),
+        'a': result.params.a,
+        'p': result.params.p,
+        'a_coefs': result.params.a_coefs,
+        'p_coefs': result.params.p_coefs
+    } 
+
+    diagnostics = {
+        'converged': result.converged,
+        'n_iter': result.n_iter,
+        'diffs': to_1d_ndarray(result.parameter_difference)
     }
 
-    return results
+    return parameters, diagnostics

@@ -22,7 +22,7 @@ namespace splinetlsm {
         
         // hyperparamters that do not change
         
-        // GIG parameters
+        // GIG(a, b, p) parameters
         double a;
         double p;
         

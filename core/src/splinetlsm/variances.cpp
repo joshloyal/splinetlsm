@@ -63,7 +63,7 @@ namespace splinetlsm {
                 }
             }
             
-            double gamma_lh = exp(log_gamma(l) - (mgp_shape(h) - mgp_rate(h)));
+            double gamma_lh = exp(log_gamma(l) - (log(mgp_shape(h)) - log(mgp_rate(h))));
             grad_d += gamma_lh * grad_lh;
         }
 

@@ -4,6 +4,8 @@
 import numpy as np
 cimport numpy as np
 
+from libcpp cimport bool
+
 from splinetlsm.armadillo cimport mat, sp_mat, field, cube, vec
 from splinetlsm.armadillo cimport to_arma_csc, to_arma_cube, to_arma_vec
 from splinetlsm.armadillo cimport to_ndarray, to_1d_ndarray, to_3d_ndarray
@@ -34,10 +36,16 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
 
         vec mgp_shape
 
+    cdef cppclass SVIResult:
+        ModelParams params
+        bool converged
+        vec parameter_difference
+        uint n_iter
+
     cdef void set_spcube_value(field[sp_mat]& Y, sp_mat& B, uint index) 
     cdef void set_4darray_value(field[cube]& Y, cube& B, uint index)
 
-    cdef ModelParams optimize_elbo(
+    cdef SVIResult optimize_elbo(
         const field[sp_mat]& Y, 
         const sp_mat& B, const field[cube]& X, 
         const vec& time_points, 

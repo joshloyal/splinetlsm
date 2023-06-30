@@ -1,6 +1,7 @@
 #include <cmath>
 #include <math.h>
 #include <boost/math/special_functions/bessel.hpp>
+#include <gsl/gsl_sf_bessel.h>
 
 #include "splinetlsm.h"
 
@@ -97,8 +98,9 @@ namespace splinetlsm {
             eta_inv = std::sqrt(params.a / params.b(i));
             
             w_prec(i) = (eta_inv * (
-                boost::math::cyl_bessel_k(params.p + 1, theta) / 
-                    boost::math::cyl_bessel_k(params.p, theta)));
+                gsl_sf_bessel_Kn_scaled(params.p + 1, theta) / 
+                    gsl_sf_bessel_Kn_scaled(params.p, theta)));
+
             w_prec(i) -= (2 * params.p) / params.b(i);
         }
 
@@ -114,10 +116,10 @@ namespace splinetlsm {
         for (uint k = 0; k < n_covariates; ++k) {
             theta = std::sqrt(params.a_coefs * params.b_coefs(k));
             eta_inv = std::sqrt(params.a_coefs / params.b_coefs(k));
-            
+             
             w_coefs_prec(k) = (eta_inv * (
-                boost::math::cyl_bessel_k(params.p_coefs + 1, theta) / 
-                    boost::math::cyl_bessel_k(params.p_coefs, theta)));
+                gsl_sf_bessel_Kn_scaled(params.p_coefs + 1, theta) / 
+                    gsl_sf_bessel_Kn_scaled(params.p_coefs, theta)));
             w_coefs_prec(k) -= (2 * params.p_coefs) / params.b_coefs(k);
         }
 

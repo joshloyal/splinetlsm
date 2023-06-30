@@ -29,8 +29,7 @@ namespace splinetlsm {
 
         // update step size
         iter_idx_ += 1;
-        double step_size = 1. / pow(
-            iter_idx_ + step_size_delay_, step_size_power_); 
+        double step_size = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
 
         //------- Sample Dyads ----------------------------------------------//
         
@@ -144,7 +143,7 @@ namespace splinetlsm {
     }
 
 
-    ModelParams optimize_elbo(
+    SVIResult optimize_elbo(
             const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
             const arma::vec& time_points, uint n_features,
             uint penalty_order, uint coefs_penalty_order, 
@@ -173,6 +172,9 @@ namespace splinetlsm {
         Params params(config);
         
         // run stochastic gradient descent
+        bool converged = false;
+        arma::vec param_diff(max_iter);
+        uint n_iter = 0;
         for (uint iter = 0; iter < max_iter; ++iter) {
             Params new_params = svi.update(Y, B, X, time_points, params);            
         
@@ -180,15 +182,19 @@ namespace splinetlsm {
 
             // XXX: - overloaded to calculate the absolute value 
             //      of the difference of natural parameters
-            double param_diff = new_params.natural - params.natural;
-            Params params = new_params;
+            param_diff(iter) = new_params.natural - params.natural;
+            params = new_params;
+            n_iter = iter;
             
-            if (param_diff < tol) {
+            if (param_diff(iter) < tol) {
                 break;
+                converged = true;
             }
 
         }
         
-        return params.model;
+        param_diff.resize(n_iter);
+
+        return {params.model, converged, param_diff, n_iter + 1};
     }
 }

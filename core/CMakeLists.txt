@@ -36,6 +36,13 @@ link_directories(${Boost_LIBRARY_DIRS})
 # NOTE: apple needs to use the clang-omp compilers
 #find_package(OpenMP REQUIRED)
 
+# GSL
+find_package(GSL REQUIRED)
+message("GSL Include: ${GSL_INCLUDE_DIRS}")
+message("GSL Libraries: ${GSL_LIBRARIES}")
+include_directories(${GSL_INCLUDE_DIRS})
+#link_directories(${GSL_LIBRARIES})
+
 # testing with Catch2
 find_package(Catch2 3 REQUIRED)
 
@@ -68,4 +75,4 @@ ADD_CUSTOM_TARGET(release
 ## ======================================================================================##
 add_executable(splinetlsm ${SOURCES})
 #target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} Boost::filesystem OpenMP::OpenMP_CXX Catch2::Catch2WithMain)
-target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} GSL::gsl Catch2::Catch2WithMain)

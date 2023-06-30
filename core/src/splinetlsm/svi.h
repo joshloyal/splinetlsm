@@ -2,6 +2,13 @@
 
 
 namespace splinetlsm {
+    
+    struct SVIResult {
+        ModelParams params;
+        bool converged;
+        arma::vec parameter_difference;
+        uint n_iter;
+    };
 
     class SVI {
     public:
@@ -21,7 +28,7 @@ namespace splinetlsm {
         double step_size_power_;
     };
     
-    ModelParams optimize_elbo(
+    SVIResult optimize_elbo(
             const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
             const arma::vec& time_points, uint n_features=2,
             uint penalty_order=1, uint coefs_penalty_order=2, 

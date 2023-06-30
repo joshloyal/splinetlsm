@@ -12,11 +12,13 @@ namespace splinetlsm {
             arma::field<arma::vec>& omega, 
             SampleInfo& sample_info, uint i, uint h) {
         
+        uint n_time_steps = sample_info.time_indices.n_elem;
+
         // initialize gradients
         arma::vec grad_mean(B.n_rows, arma::fill::zeros);
         arma::mat grad_prec(B.n_rows, B.n_rows, arma::fill::zeros);
 
-        for (uint t = 0; t < sample_info.time_indices.n_elem; ++t) {
+        for (uint t = 0; t < n_time_steps; ++t) {
             // reset indices and weights
             double time_weight_mean = 0; 
             double time_weight_prec = 0; 
@@ -33,7 +35,7 @@ namespace splinetlsm {
             for (auto j : sample_info.dyad_indices(t, i)) {
                 // get necessary variables to calculate gradients
                 double z = Y(time_index)(i, j) - 0.5;
-                arma::vec x = X(time_index).tube(j, t);
+                arma::vec x = X(time_index).tube(i, j);
                 arma::vec mu_j = moments.U.tube(j, t);
                 double sigma_jh = moments.U_sigma(j, t, h);
                 
@@ -58,7 +60,7 @@ namespace splinetlsm {
         }
         
         // re-weight sample for sampling of time points
-        double time_weight = (double) Y.n_elem / sample_info.time_indices.n_elem;
+        double time_weight = (double) Y.n_elem / n_time_steps;
         grad_mean *= time_weight;
         grad_prec *= time_weight;
 

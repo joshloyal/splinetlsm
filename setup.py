@@ -18,10 +18,11 @@ VERSION = __version__
 # armadillo header-files included with the package
 ARMADILLO_INC = os.path.join(HERE, 'third-party')
 BOOST_INC = "/opt/homebrew/include"
+GSL_LIB = "/opt/homebrew/lib"
 
 MOD_NAMES = [
     'splinetlsm.armadillo',
-    'splinetlsm.svi'
+    'splinetlsm._svi'
 ]
 
 
@@ -109,7 +110,7 @@ def cythonize_source(source, cython_cov=False):
 def make_extension(ext_name, macros=[]):
     ext_path = ext_name.replace('.', os.path.sep) + '.cpp'
     include_dirs = [numpy.get_include(), ARMADILLO_INC, BOOST_INC, ".", "./src"]
-    library_dirs = ['/usr/lib']
+    library_dirs = ['/usr/lib', GSL_LIB]
     if get_include():
         include_dirs = [get_include()] + include_dirs
 
@@ -120,7 +121,7 @@ def make_extension(ext_name, macros=[]):
         extra_compile_args=["-O3", "-fPIC", "-std=c++17", "-fopenmp"],
         extra_link_args=["-fopenmp"],
         define_macros=macros,
-        libraries=['blas', 'lapack'],
+        libraries=['blas', 'lapack', 'gsl'],
         library_dirs=library_dirs,
         language='c++')
 
