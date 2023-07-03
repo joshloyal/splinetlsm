@@ -34,7 +34,7 @@ namespace splinetlsm {
             (config.n_knots - config.penalty_order));
         
         a_coefs = config.coefs_rate_prior;
-        p_coefs = 0.5 * (config.rate_prior - 
+        p_coefs = 0.5 * (config.coefs_shape_prior - 
                 (config.n_knots - config.coefs_penalty_order));
         
         mgp_shape(0) = 2 * config.mgp_a1 + config.n_features * config.n_nodes * config.n_knots;
@@ -48,30 +48,39 @@ namespace splinetlsm {
     double NaturalParams::operator-(NaturalParams const& params) {
         double res = 0.;
         double n_params = 0.;
+        double rel = 0.;
 
         res += arma::accu(arma::square(W - params.W));
+        rel += arma::accu(arma::square(params.W));
         n_params += W.n_elem;
 
         for (uint h = 0; h < W_sigma.n_elem; ++h) {
             res += arma::accu(arma::square(W_sigma(h) - params.W_sigma(h)));
+            rel += arma::accu(arma::square(params.W_sigma(h)));
             n_params += W_sigma(h).n_elem;
         }
 
         res += arma::accu(arma::square(W_coefs - params.W_coefs));
+        rel += arma::accu(arma::square(params.W_coefs));
         n_params += W_coefs.n_elem;
 
         res += arma::accu(arma::square(W_coefs_sigma - params.W_coefs_sigma));
+        rel += arma::accu(arma::square(params.W_coefs_sigma));
         n_params += W_coefs_sigma.n_elem;
 
         res += arma::accu(arma::square(b - params.b));
+        rel += arma::accu(arma::square(params.b));
         n_params += b.n_elem;
 
         res += arma::accu(arma::square(b_coefs - params.b_coefs));
+        rel += arma::accu(arma::square(params.b_coefs));
         n_params += b_coefs.n_elem;
 
         res += arma::accu(arma::square(mgp_rate - params.mgp_rate));
+        rel += arma::accu(arma::square(params.mgp_rate));
         n_params += mgp_rate.n_elem;
         
+        //return res / rel;
         return res / n_params;
     }
 

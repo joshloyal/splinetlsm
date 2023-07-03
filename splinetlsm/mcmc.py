@@ -137,9 +137,10 @@ class SplineDynamicLSM(object):
         
         self.time_points_ = time_points
         B, self.bs_ = bspline_basis(
-                self.time_points_, n_knots=self.n_knots, degree=self.degree)
+                self.time_points_, n_knots=self.n_knots, degree=self.degree,
+                return_sparse=False)
         
-        model_args = (y, B, n_time_points, n_nodes, self.n_features, train_indices)
+        model_args = (y, B.T, n_time_points, n_nodes, self.n_features, train_indices)
         model_kwargs = {'is_predictive' : False}
         
         kernel = NUTS(splinelsm, target_accept_prob=adapt_delta)

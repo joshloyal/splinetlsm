@@ -72,6 +72,7 @@ namespace splinetlsm {
                 new_natural_params.W_sigma(h).slice(i) = (
                         (1 - step_size) * params.natural.W_sigma(h).slice(i) + 
                             step_size * grad_prec);
+    
             }
         }
 
@@ -108,6 +109,7 @@ namespace splinetlsm {
 
             new_natural_params.b(i) = (
                 (1 - step_size) * params.natural.b(i) + step_size * grad_b);
+            
         }
 
         // update covariate variances: q(sigma_k)
@@ -177,7 +179,7 @@ namespace splinetlsm {
         uint n_iter = 0;
         for (uint iter = 0; iter < max_iter; ++iter) {
             Params new_params = svi.update(Y, B, X, time_points, params);            
-        
+
             // check for convergence
 
             // XXX: - overloaded to calculate the absolute value 
@@ -187,8 +189,8 @@ namespace splinetlsm {
             n_iter = iter;
             
             if (param_diff(iter) < tol) {
-                break;
                 converged = true;
+                break;
             }
 
         }

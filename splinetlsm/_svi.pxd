@@ -35,7 +35,19 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
         double p_coefs
 
         vec mgp_shape
+    
+    cdef struct Moments:
+        cube U
+        cube U_sigma
+        
+        mat coefs
+        mat coefs_sigma
+        
+        vec w_prec
+        vec w_coefs_prec
 
+        vec log_gamma
+        
     cdef cppclass SVIResult:
         ModelParams params
         bool converged
@@ -44,6 +56,8 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
 
     cdef void set_spcube_value(field[sp_mat]& Y, sp_mat& B, uint index) 
     cdef void set_4darray_value(field[cube]& Y, cube& B, uint index)
+    
+    cdef Moments calculate_moments(const ModelParams& params, const sp_mat& B)
 
     cdef SVIResult optimize_elbo(
         const field[sp_mat]& Y, 

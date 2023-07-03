@@ -2,7 +2,7 @@ import jax.numpy as jnp
 import jax
 import pandas as pd
 
-import .static_gof as sgof
+import splinetlsm.static_gof as sgof
 
 from numpyro.distributions.util import vec_to_tril_matrix
 
