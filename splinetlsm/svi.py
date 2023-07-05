@@ -177,7 +177,7 @@ class SplineDynamicLSM(object):
         self.B_fit_, self.bs_ = bspline_basis(
                 self.time_points_, n_knots=self.n_knots_, degree=self.degree)
         
-        self.params_, self.moments_, diagnostics = optimize_elbo_svi(
+        params, moments, diagnostics = optimize_elbo_svi(
                 Y, self.B_fit_, time_points, self.X_fit_,
                 n_features=self.n_features,
                 penalty_order=self.penalty_order,
@@ -192,16 +192,46 @@ class SplineDynamicLSM(object):
                 step_size_delay=step_size_delay,
                 step_size_power=step_size_power, max_iter=max_iter,
                 tol=tol, random_state=self.random_state)
-     
+        
+        # unpack convergence diagnostics
         self.converged_ = diagnostics['converged']
         self.n_iter_ = diagnostics['n_iter']
         self.diffs_ = diagnostics['diffs']
+
+        # unpack parameters and moments
+        self.W_ = params['W']
+        self.W_sigma_ = params['W_sigma']
+        self.b_ = params['b']
+        self.w_prec_ = moments['w_prec']
+        self.U_ = moments['U']
+
+        self.W_intercept_ = params['W_intercept']
+        self.W_intercept_sigma_ = params['W_intercept_sigma']
+        self.b_intercept_ = params['b_intercept']
+        self.w_intercept_prec_ = moments['w_intercept_prec']
+        self.intercept_ = moments['intercept']
+
+        self.W_coefs_ = params['W_coefs']
+        self.W_coefs_sigma_ = params['W_coefs_sigma']
+        self.b_coefs_ = params['b_coefs']
+        self.w_coefs_prec_ = moments['w_coefs_prec']
+        self.coefs_ = moments['coefs']
+        
+        self.gamma_ = moments['gamma']
+
+        self.mgp_rate_ = params['mgp_rate']
+        self.mgp_shape_ = params['mgp_shape']
+
+        self.a_ = params['a']
+        self.p_ = params['p']
+
+        self.a_coefs_ = params['a_coefs']
+        self.b_coefs_ = params['b_coefs']
         
         # sample spline coefficients from the variational posterior
         self.samples_ = self.sample(n_samples=n_samples)
         
         # calculate in-sample AUC
-        #self.probas_ = predict_probas(self.X_fit_, self.moments_)
         self.probas_ = self.predict_proba()
         self.auc_ = calculate_auc(Y, self.probas_)
         
@@ -213,21 +243,20 @@ class SplineDynamicLSM(object):
 
         rng_key1, rng_key2 = random.split(random.PRNGKey(random_state), 2)
         
-        W = self.params_['W'].transpose((0,2,1))
-        W_sigma = self.params_['W_sigma'].transpose((3,0,1,2))
+        W = self.W_.transpose((0,2,1))
+        W_sigma = self.W_sigma_.transpose((3,0,1,2))
         samples['W'] = dist.MultivariateNormal(
                 loc=W, covariance_matrix=W_sigma).sample(
                         rng_key1, sample_shape=(n_samples,))
         
-        W_intercept = self.params_['W_intercept']
-        W_intercept_sigma = self.params_['W_intercept_sigma']
         samples['W_intercept'] = dist.MultivariateNormal(
-                loc=W_intercept, covariance_matrix=W_intercept_sigma).sample(
+                loc=self.W_intercept_, 
+                covariance_matrix=self.W_intercept_sigma_).sample(
                 rng_key2, sample_shape=(n_samples,))
 
         if self.X_fit_ is not None:
-            W_coefs = self.params_['W_coefs'].T
-            W_coefs_sigma = self.params_['W_coefs_sigma'].transpose((2,0,1))
+            W_coefs = self.W_coefs_.T
+            W_coefs_sigma = self.W_coefs_sigma_.transpose((2,0,1))
             samples['W_coefs'] = dist.MultivariateNormal(
                     loc=W_coefs, covariance_matrix=W_coefs_sigma).sample(
                             rng_key2, sample_shape=(n_samples,))
