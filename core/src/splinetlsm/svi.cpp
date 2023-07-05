@@ -12,13 +12,11 @@ namespace splinetlsm {
             double step_size_power) :  
         config_(config),
         dyad_sampler_(nonedge_proportion, n_time_steps),
-        //momentum_(config),
         iter_idx_(0), 
         step_size_delay_(step_size_delay), 
         step_size_power_(step_size_power) {}
 
-    //std::pair<Params, double>
-    Params
+    std::pair<Params, double>
     SVI::update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
                 const arma::vec& time_points, Params& params) {
         // Y : sparse csc cube of shape T x n x n
@@ -145,12 +143,13 @@ namespace splinetlsm {
         ModelParams new_params(new_natural_params);
 
         // calculate AUC on sampled dyads
-        //Moments new_moments = calculate_moments(new_params, B_sub);
+        Moments new_moments = calculate_moments(new_params, B_sub);
         //double insample_auc = roc_auc_score(Y, X, new_moments, sample_info);
+        double insample_auc = log_likelihood(Y, X, new_moments, sample_info);
         
 
-        //return {Params(new_natural_params, new_params), insample_auc};
-        return {new_natural_params, new_params};
+        //return {new_natural_params, new_params};
+        return {Params(new_natural_params, new_params), insample_auc};
     }
 
 
@@ -184,29 +183,40 @@ namespace splinetlsm {
         
         // run stochastic gradient descent
         bool converged = false;
+        uint n_converged = 0.;
+        double curr_avg_auc = 0.;
+        double prev_avg_auc = 0.;
         arma::vec param_diff(max_iter);
+        arma::vec insample_auc(max_iter);
         uint n_iter = 0;
         for (uint iter = 0; iter < max_iter; ++iter) {
-            Params new_params = svi.update(Y, B, X, time_points, params);            
-            //auto [new_params, auc] = svi.update(Y, B, X, time_points, params);            
+            //Params new_params = svi.update(Y, B, X, time_points, params);            
+            auto [new_params, auc] = svi.update(Y, B, X, time_points, params);            
             
             // check for convergence
 
             // XXX: - overloaded to calculate the absolute value 
             //      of the difference of natural parameters
             param_diff(iter) = new_params.natural - params.natural;
+            insample_auc(iter) = auc;
             params = new_params;
             
-            //param_diff(iter) = auc;
-            //if (iter > 50) {
-            //    double diff = fabs(param_diff(iter) - param_diff(iter-1));
-            //    if (diff < tol) {
-            //        converged = true;
-            //        break;
-            //    }
-            //} 
-           
-            if (param_diff(iter) < tol) {
+            if((iter >= MIN_ITER) && 
+                    (iter >= 2 * WINDOW_SIZE) && (iter % WINDOW_SIZE == 0)) {
+                curr_avg_auc = arma::median(
+                    insample_auc.rows(iter - WINDOW_SIZE, iter));
+                prev_avg_auc = arma::median(
+                    insample_auc.rows(
+                        iter - 2 * WINDOW_SIZE, iter - WINDOW_SIZE));
+
+                if(fabs(curr_avg_auc - prev_avg_auc) < tol) {
+                    n_converged += 1;
+                } else {
+                    n_converged = 0;
+                }
+            } 
+            
+            if (n_converged == 2) {
                 converged = true;
                 break;
             }
@@ -215,7 +225,8 @@ namespace splinetlsm {
         }
         
         param_diff.resize(n_iter);
+        insample_auc.resize(n_iter);
 
-        return {params.model, converged, param_diff, n_iter + 1};
+        return {params.model, converged, param_diff, insample_auc, n_iter + 1};
     }
 }

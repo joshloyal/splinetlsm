@@ -5,7 +5,7 @@
 #include <armadillo>
 
 #include "splinetlsm/typedefs.h"
-//#include "splinetlsm/AUROC.h"
+#include "splinetlsm/AUROC.h"
 //#include "splinetlsm/progressbar.h"
 
 #include "splinetlsm/samplers/time_sampler.h"
@@ -19,7 +19,7 @@
 #include "splinetlsm/latent_positions.h"
 #include "splinetlsm/coefs.h"
 #include "splinetlsm/variances.h"
-//#include "splinetlsm/metrics.h"
+#include "splinetlsm/metrics.h"
 #include "splinetlsm/svi.h"
 
 #include "splinetlsm/wrapper_utils.h"

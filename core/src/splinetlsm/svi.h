@@ -3,10 +3,14 @@
 
 namespace splinetlsm {
     
+    const uint MIN_ITER = 40;
+    const uint WINDOW_SIZE = 20;
+
     struct SVIResult {
         ModelParams params;
         bool converged;
         arma::vec parameter_difference;
+        arma::vec insample_auc;
         uint n_iter;
     };
 
@@ -16,8 +20,7 @@ namespace splinetlsm {
                 uint n_time_steps=10, double step_size_delay=1, 
                 double step_size_power=0.75);
         
-        //std::pair<Params, double>
-        Params
+        std::pair<Params, double>
         update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X, 
             const arma::vec& time_points, Params& params);
         

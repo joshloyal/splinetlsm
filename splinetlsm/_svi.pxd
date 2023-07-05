@@ -52,6 +52,7 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
         ModelParams params
         bool converged
         vec parameter_difference
+        vec insample_auc
         uint n_iter
 
     cdef void set_spcube_value(field[sp_mat]& Y, sp_mat& B, uint index) 

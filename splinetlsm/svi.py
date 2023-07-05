@@ -135,7 +135,8 @@ class SplineDynamicLSM(object):
 
     def fit(self, Y, time_points, X=None, 
             nonedge_proportion=1, n_time_points=0.5, n_samples=2000,
-            step_size_delay=1,  step_size_power=0.9, max_iter=1000, tol=1e-3):
+            step_size_delay=1,  step_size_power=0.51, 
+            max_iter=1000, tol=1e-2):
         """
         Parameters
         ----------
@@ -197,6 +198,7 @@ class SplineDynamicLSM(object):
         self.converged_ = diagnostics['converged']
         self.n_iter_ = diagnostics['n_iter']
         self.diffs_ = diagnostics['diffs']
+        self.aucs_ = diagnostics['auc']
 
         # unpack parameters and moments
         self.W_ = params['W']
@@ -210,12 +212,13 @@ class SplineDynamicLSM(object):
         self.b_intercept_ = params['b_intercept']
         self.w_intercept_prec_ = moments['w_intercept_prec']
         self.intercept_ = moments['intercept']
-
-        self.W_coefs_ = params['W_coefs']
-        self.W_coefs_sigma_ = params['W_coefs_sigma']
-        self.b_coefs_ = params['b_coefs']
-        self.w_coefs_prec_ = moments['w_coefs_prec']
-        self.coefs_ = moments['coefs']
+        
+        if self.X_fit_ is not None:
+            self.W_coefs_ = params['W_coefs']
+            self.W_coefs_sigma_ = params['W_coefs_sigma']
+            self.b_coefs_ = params['b_coefs']
+            self.w_coefs_prec_ = moments['w_coefs_prec']
+            self.coefs_ = moments['coefs']
         
         self.gamma_ = moments['gamma']
 
