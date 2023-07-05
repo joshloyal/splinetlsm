@@ -10,15 +10,15 @@ namespace splinetlsm {
         double operator-(NaturalParams const& params);
 
     public:
-        arma::cube W;              // n x L_m x d array of node weights natural parameters lambda_ih
-        array4d W_sigma;           // d x L_m x L_m x n array of node weight precisions Lambda_ih
+        arma::cube W;                // n x L_m x d array of node weights natural parameters lambda_ih
+        array4d W_sigma;             // d x L_m x L_m x n array of node weight precisions Lambda_ih
         
-        arma::mat W_coefs;          // L_m x p array of covariate weights natural parameters lambda_k
-        arma::cube W_coefs_sigma;   // L_m x L_m x p array of covariate weight precisions Lambda_k
+        arma::mat W_coefs;           // L_m x p array of covariate weights natural parameters lambda_k
+        arma::cube W_coefs_sigma;    // L_m x L_m x p array of covariate weight precisions Lambda_k
         
-        arma::vec b;                // n-dimensional vector GIG b parameters for node variances sigma_i
-        arma::vec b_coefs;          // p-dimensional vector GIG b paramters for covariates sigma_beta_k
-        arma::vec mgp_rate;         // d-dimensional vector of rate parameters for the MGP (q(nu_h) = Gamma(a, rate[h]))
+        arma::vec b;                 // n-dimensional vector GIG b parameters for node variances sigma_i
+        arma::vec b_coefs;           // p-dimensional vector GIG b paramters for covariates sigma_beta_k
+        arma::vec mgp_rate;          // d-dimensional vector of rate parameters for the MGP (q(nu_h) = Gamma(a, rate[h]))
         
         // hyperparamters that do not change
         
@@ -40,15 +40,15 @@ namespace splinetlsm {
         ModelParams(NaturalParams& natural_params);
     
     public:
-        arma::cube W;              // n x L_m x d array of node weights means E[w_{ih,q}]
-        array4d W_sigma;           // d x L_m x L_m x n array of node weight covariances Cov(w_{ih})
+        arma::cube W;                 // n x L_m x d array of node weights means E[w_{ih,q}]
+        array4d W_sigma;              // d x L_m x L_m x n array of node weight covariances Cov(w_{ih})
         
-        arma::mat W_coefs;          // L_m x p array of covariate weights E[w_k]
-        arma::cube W_coefs_sigma;   // L_m x L_m x p array of covariate weight covariances Cov(w_k)
+        arma::mat W_coefs;            // L_m x p array of covariate weights E[w_k]
+        arma::cube W_coefs_sigma;     // L_m x L_m x p array of covariate weight covariances Cov(w_k)
         
-        arma::vec b;                // n-dimensional vector GIG b parameters for node variances sigma_i
-        arma::vec b_coefs;          // p-dimensional vector GIG b paramters for covariates sigma_beta_k
-        arma::vec mgp_rate;         // d-dimensional vector of rate parameters for the MGP (q(nu_h) = Gamma(a, rate[h]))
+        arma::vec b;                  // n-dimensional vector GIG b parameters for node variances sigma_i
+        arma::vec b_coefs;            // p-dimensional vector GIG b paramters for covariates sigma_beta_k
+        arma::vec mgp_rate;           // d-dimensional vector of rate parameters for the MGP (q(nu_h) = Gamma(a, rate[h]))
 
         // hyperparamters that do not change
         

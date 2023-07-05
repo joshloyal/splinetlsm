@@ -59,11 +59,12 @@ namespace splinetlsm {
 
                 for (uint r = 0; r < penalty_order; ++r) {
                    grad_lh += tau_prec * (
-                           pow(W.slice(l)(i, r), 2) + W_sigma(l).slice(i)(r, r));
+                        pow(W.slice(l)(i, r), 2) + W_sigma(l).slice(i)(r, r));
                 }
             }
             
-            double gamma_lh = exp(log_gamma(l) - (log(mgp_shape(h)) - log(mgp_rate(h))));
+            double gamma_lh = exp(
+                    log_gamma(l) - (log(mgp_shape(h)) - log(mgp_rate(h))));
             grad_d += gamma_lh * grad_lh;
         }
 

@@ -9,7 +9,7 @@ namespace splinetlsm {
             uint i, uint j, uint t) {
         
         // extract necessary parameters
-        arma::vec x = X.tube(i, j);
+        arma::vec x = get_covariates(X, i, j);
         arma::vec mu_i = moments.U.tube(i, t);
         arma::vec mu_j = moments.U.tube(j, t);
         arma::vec mu_coefs = moments.coefs.col(t);
@@ -20,7 +20,7 @@ namespace splinetlsm {
         // calculate mu_{omega_{ij,t}}
         double c_sq = pow(
                 arma::as_scalar(mu_coefs.t() * x + mu_i.t() * mu_j), 2);
-
+        
         c_sq += arma::accu(x.t() * (Sigma_coefs % x)); 
         c_sq += arma::as_scalar(Sigma_i.t() * Sigma_j);
         c_sq += arma::as_scalar(mu_i.t() * (Sigma_j % mu_i));
@@ -35,7 +35,7 @@ namespace splinetlsm {
             const Moments& moments, const array4d& X, 
             const SampleInfo& sample_info) {
         
-        uint n_nodes = X(0).n_rows;
+        uint n_nodes = moments.U.n_rows;
         uint n_time_steps = sample_info.time_indices.n_elem;
 
         arma::field<arma::vec> omega(n_time_steps, n_nodes);

@@ -12,7 +12,8 @@ namespace splinetlsm {
             double mgp_a1=2, double mgp_a2=3,
             double tau_prec=0.01, double coefs_tau_prec=0.01);
 
-    public:    
+    public:   
+        uint n_time_points;
         uint n_nodes;
         uint n_features;
         uint n_covariates;
@@ -37,6 +38,8 @@ namespace splinetlsm {
         
         arma::mat coefs_penalty_matrix;
         arma::mat coefs_diff_matrix;
+
+        arma::vec density;
     };
 
 }

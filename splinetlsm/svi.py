@@ -32,13 +32,18 @@ def predict_proba(samples, X, B):
     
     # calculate latent positions and coeficients
     U = samples['W'] @ B
-    coefs = samples['W_coefs'] @ B
+    intercept = samples['W_intercept'] @ B
+
+    if X is not None:
+        coefs = samples['W_coefs'] @ B
 
     # calculate likelihood
     subdiag = jnp.tril_indices(n_nodes, k=-1)
     def probas_fun(carry, t):
         U = carry
-        logits = (X[t] @ coefs[..., t] + U[..., t] @ U[..., t].T)[subdiag]
+        logits = intercept[t] + (U[..., t] @ U[..., t].T)[subdiag]
+        if X is not None:
+            logits += (X[t] @ coefs[..., t])[subdiag]
         return U, expit(logits)
 
     _, probas = scan(probas_fun, U, jnp.arange(n_time_points))
@@ -52,13 +57,18 @@ def posterior_predictive(rng_key, samples, stat_fun, X, B):
     
     # calculate latent positions and coeficients
     U = samples['W'] @ B
-    coefs = samples['W_coefs'] @ B
+    intercept = samples['W_intercept'] @ B
+    
+    if X is not None:
+        coefs = samples['W_coefs'] @ B
 
     # calculate likelihood
     subdiag = jnp.tril_indices(n_nodes, k=-1)
     def sample_network(carry, t):
         U = carry
-        logits = (X[t] @ coefs[..., t] + U[..., t] @ U[..., t].T)[subdiag]
+        logits = intercept[t] + (U[..., t] @ U[..., t].T)[subdiag]
+        if X is not None:
+            logits += (X[t] @ coefs[..., t])[subdiag]
         y = dist.Bernoulli(logits=logits).sample(rng_key)
         return U, y
 
@@ -67,19 +77,29 @@ def posterior_predictive(rng_key, samples, stat_fun, X, B):
     return stat_fun(y)
 
 
-def calculate_auc(Y, X, moments):
+#def calculate_auc(Y, X, moments):
+#    n_time_steps = len(Y)
+#    n_nodes = Y[0].shape[0]
+#    y_true, y_pred = [], []
+#    subdiag = np.tril_indices(n_nodes, k=-1)
+#    for t in range(n_time_steps):
+#        U = moments['U'][:, t, :]
+#        coefs = moments['coefs'][:, t]
+#
+#        y_true.append(Y[t].toarray()[subdiag])
+#        y_pred.append(expit((X[t] @ coefs + U @ U.T)[subdiag]))
+#    
+#    return roc_auc_score(np.concatenate(y_true), np.concatenate(y_pred))
+
+def calculate_auc(Y, probas):
     n_time_steps = len(Y)
     n_nodes = Y[0].shape[0]
     y_true, y_pred = [], []
     subdiag = np.tril_indices(n_nodes, k=-1)
     for t in range(n_time_steps):
-        U = moments['U'][:, t, :]
-        coefs = moments['coefs'][:, t]
-
         y_true.append(Y[t].toarray()[subdiag])
-        y_pred.append(expit((X[t] @ coefs + U @ U.T)[subdiag]))
     
-    return roc_auc_score(np.concatenate(y_true), np.concatenate(y_pred))
+    return roc_auc_score(np.concatenate(y_true), probas.ravel())
 
 
 class SplineDynamicLSM(object):
@@ -115,7 +135,7 @@ class SplineDynamicLSM(object):
 
     def fit(self, Y, time_points, X=None, 
             nonedge_proportion=1, n_time_points=0.5, n_samples=2000,
-            step_size_delay=1,  step_size_power=0.75, max_iter=1000, tol=1e-3):
+            step_size_delay=1,  step_size_power=0.9, max_iter=1000, tol=1e-3):
         """
         Parameters
         ----------
@@ -142,7 +162,7 @@ class SplineDynamicLSM(object):
         n_nodes = Y[0].shape[0]
         
         if np.asarray(n_time_points).dtype.kind == 'f':
-            self.n_time_points_ = max(ceil(n_time_steps * n_time_points), 100)
+            self.n_time_points_ = min(ceil(n_time_steps * n_time_points), 100)
         else:
             self.n_time_points_ = min(n_time_points, n_time_steps)
         
@@ -152,12 +172,7 @@ class SplineDynamicLSM(object):
         else:
             self.n_knots_ = self.n_knots
         
-        if X is None:
-            # intercept
-            self.X_fit_ = np.ones((n_time_steps, n_nodes, n_nodes, 1))
-        else:
-            self.X_fit_ = X
-
+        self.X_fit_ = X
         self.time_points_ = time_points
         self.B_fit_, self.bs_ = bspline_basis(
                 self.time_points_, n_knots=self.n_knots_, degree=self.degree)
@@ -188,7 +203,7 @@ class SplineDynamicLSM(object):
         # calculate in-sample AUC
         #self.probas_ = predict_probas(self.X_fit_, self.moments_)
         self.probas_ = self.predict_proba()
-        self.auc_ = calculate_auc(Y, self.X_fit_, self.moments_)
+        self.auc_ = calculate_auc(Y, self.probas_)
         
 
         return self
@@ -200,33 +215,40 @@ class SplineDynamicLSM(object):
         
         W = self.params_['W'].transpose((0,2,1))
         W_sigma = self.params_['W_sigma'].transpose((3,0,1,2))
-
         samples['W'] = dist.MultivariateNormal(
                 loc=W, covariance_matrix=W_sigma).sample(
                         rng_key1, sample_shape=(n_samples,))
         
-        W_coefs = self.params_['W_coefs'].T
-        W_coefs_sigma = self.params_['W_coefs_sigma'].transpose((2,0,1))
+        W_intercept = self.params_['W_intercept']
+        W_intercept_sigma = self.params_['W_intercept_sigma']
+        samples['W_intercept'] = dist.MultivariateNormal(
+                loc=W_intercept, covariance_matrix=W_intercept_sigma).sample(
+                rng_key2, sample_shape=(n_samples,))
 
-        samples['W_coefs'] = dist.MultivariateNormal(
-                loc=W_coefs, covariance_matrix=W_coefs_sigma).sample(
-                        rng_key2, sample_shape=(n_samples,))
+        if self.X_fit_ is not None:
+            W_coefs = self.params_['W_coefs'].T
+            W_coefs_sigma = self.params_['W_coefs_sigma'].transpose((2,0,1))
+            samples['W_coefs'] = dist.MultivariateNormal(
+                    loc=W_coefs, covariance_matrix=W_coefs_sigma).sample(
+                            rng_key2, sample_shape=(n_samples,))
 
         return samples
     
     def predict_proba(self):
+        X = None if self.X_fit_ is None else jnp.array(self.X_fit_)
         return vmap(
             lambda samples : predict_proba(samples, 
-                jnp.array(self.X_fit_), jnp.array(self.B_fit_.todense()))
+                X, jnp.array(self.B_fit_.todense()))
             )(self.samples_).mean(axis=0)
     
     def posterior_predictive(self, stat_fun, random_state=42):
         rng_key = random.PRNGKey(random_state)
         
+        X = None if self.X_fit_ is None else jnp.array(self.X_fit_)
         n_samples  = self.samples_['W'].shape[0]
         vmap_args = (self.samples_, random.split(rng_key, n_samples))
         return np.asarray(vmap(
             lambda samples, rng_key : posterior_predictive(
                 rng_key, samples, stat_fun,
-                jnp.array(self.X_fit_), jnp.array(self.B_fit_.todense()))
+                X, jnp.array(self.B_fit_.todense()))
             )(*vmap_args))

@@ -35,7 +35,7 @@ namespace splinetlsm {
             for (auto j : sample_info.dyad_indices(t, i)) {
                 // get necessary variables to calculate gradients
                 double z = Y(time_index)(i, j) - 0.5;
-                arma::vec x = X(time_index).tube(i, j);
+                arma::vec x = get_covariates(X(time_index), i, j);
                 arma::vec mu_j = moments.U.tube(j, t);
                 double sigma_jh = moments.U_sigma(j, t, h);
                 

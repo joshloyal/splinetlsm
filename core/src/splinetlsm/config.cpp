@@ -10,9 +10,10 @@ namespace splinetlsm {
             double coefs_rate_prior, double coefs_shape_prior,
             double mgp_a1, double mgp_a2,
             double tau_prec, double coefs_tau_prec) :
+        n_time_points(Y.n_elem),
         n_nodes(Y(0).n_rows),
         n_features(n_features),
-        n_covariates(X(0).n_slices),
+        n_covariates(X(0).n_slices + 1),  // intercept + covariates
         n_knots(B.n_rows),
         penalty_order(penalty_order),
         coefs_penalty_order(coefs_penalty_order),
@@ -23,7 +24,8 @@ namespace splinetlsm {
         mgp_a1(mgp_a1), 
         mgp_a2(mgp_a2),
         tau_prec(tau_prec), 
-        coefs_tau_prec(coefs_tau_prec) {
+        coefs_tau_prec(coefs_tau_prec),
+        density(n_time_points) {
 
             // latent positions' difference and penalty matrices
             diff_matrix = diff(
@@ -35,5 +37,8 @@ namespace splinetlsm {
                 arma::mat(n_knots, n_knots, arma::fill::eye), coefs_penalty_order);
             coefs_penalty_matrix = coefs_diff_matrix.t() * coefs_diff_matrix;
 
-    } 
+            for (uint h = 0; h < n_time_points; ++h) {
+                density(h) = arma::mean(arma::mean(Y(h)));
+            }
+    }
 }

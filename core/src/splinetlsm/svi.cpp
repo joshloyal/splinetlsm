@@ -5,18 +5,19 @@
 
 
 namespace splinetlsm {
-     
+    
     SVI::SVI(ModelConfig& config, double nonedge_proportion,
             uint n_time_steps,
             double step_size_delay, 
             double step_size_power) :  
         config_(config),
         dyad_sampler_(nonedge_proportion, n_time_steps),
+        //momentum_(config),
         iter_idx_(0), 
         step_size_delay_(step_size_delay), 
         step_size_power_(step_size_power) {}
 
-
+    //std::pair<Params, double>
     Params
     SVI::update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
                 const arma::vec& time_points, Params& params) {
@@ -53,13 +54,13 @@ namespace splinetlsm {
         //------- Latent Position Spline Weights ----------------------------//
         
         // update latent position weights: q(w_ih)
-        for (uint i = 0; i < n_nodes; i++) {
+        for (uint i = 0; i < n_nodes; ++i) {
             
             // calculate prior precision matrix for node i (Omega_i)
             arma::mat prior_precision = calculate_prior_precision(
                     moments.w_prec(i), config_);
 
-            for (uint h = 0; h < config_.n_features; h++) {
+            for (uint h = 0; h < config_.n_features; ++h) {
                 auto [grad_mean, grad_prec] = calculate_latent_position_gradients(
                         Y, X, B_sub, moments, prior_precision, omega,
                         sample_info, i, h);
@@ -74,13 +75,14 @@ namespace splinetlsm {
                             step_size * grad_prec);
     
             }
+            
         }
 
 
         //------- Time-Varying Coefficient Spline Weights -------------------//
-        
+         
         // update covariate weights: q(w_k)
-        for (uint k = 0; k < config_.n_covariates; k++) {
+        for (uint k = 0; k < config_.n_covariates; ++k) {
             // calculate prior precision matrix for feature k
             arma::mat prior_precision = calculate_coefs_prior_precision(
                     moments.w_coefs_prec(k), config_);
@@ -88,7 +90,7 @@ namespace splinetlsm {
             auto [grad_mean, grad_prec] = calculate_coef_gradients(
                     Y, X, B_sub, moments, prior_precision, omega,
                     sample_info, k);
-                
+            
             // take a gradient step
             new_natural_params.W_coefs.col(k) = (
                     (1 - step_size) * params.natural.W_coefs.col(k) + 
@@ -98,6 +100,7 @@ namespace splinetlsm {
                     (1 - step_size) * params.natural.W_coefs_sigma.slice(k) +
                         step_size * grad_prec);
         }
+
         
         //------- High-Level Variance Parameters --------------------------//
         
@@ -141,6 +144,12 @@ namespace splinetlsm {
         // transform natural parameters to standard parameters
         ModelParams new_params(new_natural_params);
 
+        // calculate AUC on sampled dyads
+        //Moments new_moments = calculate_moments(new_params, B_sub);
+        //double insample_auc = roc_auc_score(Y, X, new_moments, sample_info);
+        
+
+        //return {Params(new_natural_params, new_params), insample_auc};
         return {new_natural_params, new_params};
     }
 
@@ -179,20 +188,30 @@ namespace splinetlsm {
         uint n_iter = 0;
         for (uint iter = 0; iter < max_iter; ++iter) {
             Params new_params = svi.update(Y, B, X, time_points, params);            
-
+            //auto [new_params, auc] = svi.update(Y, B, X, time_points, params);            
+            
             // check for convergence
 
             // XXX: - overloaded to calculate the absolute value 
             //      of the difference of natural parameters
             param_diff(iter) = new_params.natural - params.natural;
             params = new_params;
-            n_iter = iter;
             
+            //param_diff(iter) = auc;
+            //if (iter > 50) {
+            //    double diff = fabs(param_diff(iter) - param_diff(iter-1));
+            //    if (diff < tol) {
+            //        converged = true;
+            //        break;
+            //    }
+            //} 
+           
             if (param_diff(iter) < tol) {
                 converged = true;
                 break;
             }
 
+            n_iter = iter; 
         }
         
         param_diff.resize(n_iter);

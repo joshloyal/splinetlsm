@@ -4,6 +4,16 @@
 
 
 namespace splinetlsm {
+    
+    arma::vec get_covariates(const arma::cube& X, uint i, uint j) {
+        arma::vec x = arma::vec(1, arma::fill::ones);
+        if (X.n_slices > 0) {
+            arma::vec x_covariates = X.tube(i, j);
+            x = arma::join_cols(x, x_covariates);
+        }
+
+        return x;
+    }
 
     std::pair<arma::vec, arma::mat> calculate_coef_gradients(
             const sp_cube& Y, const array4d& X, const arma::sp_mat& B, 
@@ -34,9 +44,11 @@ namespace splinetlsm {
                 double degree = sample_info.degrees(t, i);
                 double nonedge_weight = sample_info.weights(t, i);
                 for (auto j : sample_info.dyad_indices(t, i)) {
+                    //if (j < i) {
                     // get necessary variables to calculate gradients
                     double z = Y(time_index)(i, j) - 0.5;
-                    arma::vec x = X(time_index).tube(i, j);
+                    
+                    arma::vec x = get_covariates(X(time_index), i, j);
                     arma::vec mu_j = moments.U.tube(j, t);
                     
                     // dyad weight
@@ -44,7 +56,7 @@ namespace splinetlsm {
                             (dyad_idx < degree) ? 1.0 : nonedge_weight);
                     
                     // gradient of the mean
-                    double residual = z -  omega_it(dyad_idx) * arma::as_scalar(
+                    double residual = z - omega_it(dyad_idx) * arma::as_scalar(
                         coefs.t() * x - coefs(k) * x(k) + mu_i.t() * mu_j);
 
                     time_weight_mean += sample_weight * x(k) * residual; 
@@ -53,17 +65,50 @@ namespace splinetlsm {
                     time_weight_prec += (
                             sample_weight * omega_it(dyad_idx) * pow(x(k), 2));
 
+                    //} 
                     dyad_idx += 1;
-                
                 }
             }
+            
+            // XXX: sample connections from a single node
+            //uint i = arma::randi(1, arma::distr_param(0, n_nodes-1))(0);
+            //uint dyad_idx = 0.;
+            //arma::vec omega_it = omega(t, i);
+            //arma::vec mu_i = moments.U.tube(i, t);
+            //double degree = sample_info.degrees(t, i);
+            //double nonedge_weight = sample_info.weights(t, i);
+            //for (auto j : sample_info.dyad_indices(t, i)) {
+            //    // get necessary variables to calculate gradients
+            //    double z = Y(time_index)(i, j) - 0.5;
+            //    arma::vec x = X(time_index).tube(i, j);
+            //    arma::vec mu_j = moments.U.tube(j, t);
+            //    
+            //    // dyad weight
+            //    double sample_weight = (
+            //            (dyad_idx < degree) ? 1.0 : nonedge_weight);
+            //    
+            //    // gradient of the mean
+            //    double residual = z -  omega_it(dyad_idx) * arma::as_scalar(
+            //        coefs.t() * x - coefs(k) * x(k) + mu_i.t() * mu_j);
+
+            //    time_weight_mean += sample_weight * x(k) * residual; 
+
+            //    // gradient of the precision
+            //    time_weight_prec += (
+            //            sample_weight * omega_it(dyad_idx) * pow(x(k), 2));
+
+            //    dyad_idx += 1;
+            //
+            //}
 
             grad_mean += time_weight_mean * B.col(t);
             grad_prec += time_weight_prec * (B.col(t) * B.col(t).t());
         }
         
         // re-weight sample for sampling of time points
-        double time_weight = (double) Y.n_elem / sample_info.time_indices.n_elem;
+        double time_weight = (double) Y.n_elem / n_time_steps;
+        //grad_mean *= time_weight;
+        //grad_prec *= time_weight;
         grad_mean *= 0.5 * time_weight;
         grad_prec *= 0.5 * time_weight;
 

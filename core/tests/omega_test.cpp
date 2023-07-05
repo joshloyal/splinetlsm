@@ -58,7 +58,7 @@ TEST_CASE("Omega", "[omega]") {
     splinetlsm::DyadSampler dyad_sampler(proportion, n_time_steps);
     splinetlsm::SampleInfo sample_info = dyad_sampler.draw(Y, time_points); 
     arma::sp_mat B_sub = B.cols(sample_info.time_indices);
-
+    
     splinetlsm::Moments moments = splinetlsm::calculate_moments(
             params.model, B_sub);
     
@@ -67,5 +67,5 @@ TEST_CASE("Omega", "[omega]") {
     
     REQUIRE(omega.n_rows == n_time_steps);
     REQUIRE(omega.n_cols == n_nodes);
-    REQUIRE(arma::all(omega(2, 1) >= 0.));
+    REQUIRE(arma::all(omega(1, 1) >= 0.));
 }

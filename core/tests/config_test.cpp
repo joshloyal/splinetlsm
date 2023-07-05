@@ -20,7 +20,7 @@ TEST_CASE("Config", "[config]") {
     splinetlsm::ModelConfig config(Y, B, X, 2, 1, 2);
     
     REQUIRE(config.n_nodes == n_nodes);
-    REQUIRE(config.n_covariates == n_covariates);
+    REQUIRE(config.n_covariates == n_covariates + 1);
     REQUIRE(config.n_knots == B.n_rows);
     
     //std::cout << config.diff_matrix << std::endl;

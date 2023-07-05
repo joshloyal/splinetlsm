@@ -55,13 +55,26 @@ def optimize_elbo_svi(Y, B, time_points, X,
         nonedge_proportion=5, uint n_time_steps=5,
         step_size_delay=1., step_size_power=0.75,
         max_iter=100, tol=0.001, random_state=42):
-
+    
+    cdef uint n_time_points = time_points.shape[0]
     cdef field[sp_mat] Y_arma = to_sparse_cube(Y)
     cdef sp_mat B_arma = to_arma_csc(B)
-    cdef field[cube] X_arma = to_arma_4d(X)
+    cdef field[cube] X_arma
     cdef vec time_points_arma = to_arma_vec(time_points)
+
     cdef ModelParams params
     cdef Moments mom
+
+    cdef np.ndarray[np.double_t, ndim=2] W_coefs
+    cdef np.ndarray[np.double_t, ndim=3] W_coefs_sigma
+    cdef np.ndarray[np.double_t, ndim=1] b_coefs
+    cdef np.ndarray[np.double_t, ndim=2] coefs
+    cdef np.ndarray[np.double_t, ndim=1] w_coefs_prec
+    
+    if X is None:
+        X_arma = field[cube](n_time_points)
+    else:
+        X_arma = to_arma_4d(X)
 
     result = optimize_elbo(
         Y_arma, B_arma, X_arma, time_points_arma,
@@ -75,13 +88,20 @@ def optimize_elbo_svi(Y, B, time_points, X,
         step_size_delay=step_size_delay, step_size_power=step_size_power,
         max_iter=max_iter, tol=tol, random_state=random_state)
     
+    W_coefs = to_ndarray(result.params.W_coefs)
+    W_coefs_sigma = to_3d_ndarray(result.params.W_coefs_sigma)
+    b_coefs = to_1d_ndarray(result.params.b_coefs)
+
     parameters = {
         'W': to_3d_ndarray(result.params.W),                 # n x L_m x d
-        'W_sigma': to_4d_ndarray(result.params.W_sigma),     # d x L_m x L_m x d
-        'W_coefs': to_ndarray(result.params.W_coefs),        # L_m x p
-        'W_coefs_sigma': to_3d_ndarray(result.params.W_coefs_sigma), # L_m x L_m x p
+        'W_sigma': to_4d_ndarray(result.params.W_sigma),     # n x L_m x L_m x d
+        'W_intercept': W_coefs[:, 0],                        # (L_m,)
+        'W_intercept_sigma': W_coefs_sigma[..., 0],          # L_m x L_m
+        'W_coefs': W_coefs[..., 1:],                         # L_m x p
+        'W_coefs_sigma': W_coefs_sigma[..., 1:],             # L_m x L_m x p
         'b': to_1d_ndarray(result.params.b),                 # (n,)
-        'b_coefs': to_1d_ndarray(result.params.b_coefs),     # (p,)
+        'b_intercept': b_coefs[0],
+        'b_coefs': b_coefs[1:],                              # (p,)
         'mgp_rate': to_1d_ndarray(result.params.mgp_rate),   # (d,)
         'mgp_shape': to_1d_ndarray(result.params.mgp_shape), # (d,)
         'a': result.params.a,
@@ -97,11 +117,15 @@ def optimize_elbo_svi(Y, B, time_points, X,
     }
 
     mom = calculate_moments(result.params, B_arma)
+    coefs = to_ndarray(mom.coefs)
+    w_coefs_prec = to_1d_ndarray(mom.w_coefs_prec)
     moments = {
             'U': to_3d_ndarray(mom.U),                       # n x T x d
-            'coefs': to_ndarray(mom.coefs),                  # p x T
+            'intercept': coefs[0],                           # (T,)
+            'coefs': coefs[1:],                              # p x T
             'w_prec': to_1d_ndarray(mom.w_prec),             # (n,)
-            'w_coefs_prec': to_1d_ndarray(mom.w_coefs_prec), # (p,)
+            'w_intercept_prec': w_coefs_prec[0],              
+            'w_coefs_prec': w_coefs_prec[1:],                # (p,)
             'gamma': np.exp(to_1d_ndarray(mom.log_gamma))    # (d,)
 
     }

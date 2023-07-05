@@ -15,9 +15,10 @@ namespace splinetlsm {
         SVI(ModelConfig& config, double nonedge_proporition=5, 
                 uint n_time_steps=10, double step_size_delay=1, 
                 double step_size_power=0.75);
-       
-        //std::pair<NaturalParams, ModelParams> 
-        Params update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X, 
+        
+        //std::pair<Params, double>
+        Params
+        update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X, 
             const arma::vec& time_points, Params& params);
         
     private:

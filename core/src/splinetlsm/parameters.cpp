@@ -1,18 +1,29 @@
+#include <math.h>
 #include "splinetlsm.h"
 
 
 namespace splinetlsm {
     
+    double logit(double x) {
+        return log(x / (1 - x));
+    }
+
     NaturalParams::NaturalParams(ModelConfig& config) : 
             W(config.n_nodes, config.n_knots, config.n_features, arma::fill::randn), 
             W_sigma(config.n_features),
             W_coefs(config.n_knots, config.n_covariates, arma::fill::randn),
             W_coefs_sigma(config.n_knots, config.n_knots, config.n_covariates),
-            b(config.n_nodes, arma::fill::ones),
-            b_coefs(config.n_covariates, arma::fill::ones),
-            mgp_rate(config.n_features, arma::fill::ones),
+            b(config.n_nodes, arma::fill::value(100)),
+            b_coefs(config.n_covariates, arma::fill::value(100)),
+            mgp_rate(config.n_features, arma::fill::value(100)),
             mgp_shape(config.n_features) {
         
+        
+        //for (uint h = 0; h < config.n_features; ++h) {
+        //    arma::rowvec means = arma::mean(W.slice(h), 0);
+        //    W.slice(h).each_row() -= means;
+        //}
+
         // initialize covariances to the identity
         W_sigma.fill(arma::cube(config.n_knots, config.n_knots, config.n_nodes, 
             arma::fill::zeros));
@@ -22,6 +33,9 @@ namespace splinetlsm {
                         config.n_knots, config.n_knots, arma::fill::eye);
             }
         }
+        
+        // intercept initialized to the average density of the network
+        W_coefs.col(0).fill(logit(arma::mean(config.density)));
 
         for (uint k = 0; k < config.n_covariates; ++k) {
             W_coefs_sigma.slice(k) = arma::eye(config.n_knots, config.n_knots);
@@ -48,36 +62,36 @@ namespace splinetlsm {
     double NaturalParams::operator-(NaturalParams const& params) {
         double res = 0.;
         double n_params = 0.;
-        double rel = 0.;
+        //double rel = 0.;
 
         res += arma::accu(arma::square(W - params.W));
-        rel += arma::accu(arma::square(params.W));
+        //rel += arma::accu(arma::square(params.W));
         n_params += W.n_elem;
 
         for (uint h = 0; h < W_sigma.n_elem; ++h) {
             res += arma::accu(arma::square(W_sigma(h) - params.W_sigma(h)));
-            rel += arma::accu(arma::square(params.W_sigma(h)));
+            //rel += arma::accu(arma::square(params.W_sigma(h)));
             n_params += W_sigma(h).n_elem;
         }
 
         res += arma::accu(arma::square(W_coefs - params.W_coefs));
-        rel += arma::accu(arma::square(params.W_coefs));
+        //rel += arma::accu(arma::square(params.W_coefs));
         n_params += W_coefs.n_elem;
 
         res += arma::accu(arma::square(W_coefs_sigma - params.W_coefs_sigma));
-        rel += arma::accu(arma::square(params.W_coefs_sigma));
+        //rel += arma::accu(arma::square(params.W_coefs_sigma));
         n_params += W_coefs_sigma.n_elem;
 
         res += arma::accu(arma::square(b - params.b));
-        rel += arma::accu(arma::square(params.b));
+        //rel += arma::accu(arma::square(params.b));
         n_params += b.n_elem;
 
         res += arma::accu(arma::square(b_coefs - params.b_coefs));
-        rel += arma::accu(arma::square(params.b_coefs));
+        //rel += arma::accu(arma::square(params.b_coefs));
         n_params += b_coefs.n_elem;
 
         res += arma::accu(arma::square(mgp_rate - params.mgp_rate));
-        rel += arma::accu(arma::square(params.mgp_rate));
+        //rel += arma::accu(arma::square(params.mgp_rate));
         n_params += mgp_rate.n_elem;
         
         //return res / rel;
@@ -107,7 +121,7 @@ namespace splinetlsm {
         W_sigma.fill(arma::cube(arma::size(natural_params.W_sigma(0))));
         for (uint i = 0; i < n_nodes; ++i) {
             for (uint h = 0; h < n_features; ++h) {
-                W_sigma(h).slice(i) = inv(
+                W_sigma(h).slice(i) = arma::inv(
                     natural_params.W_sigma(h).slice(i), arma::inv_opts::allow_approx);
                 W.slice(h).row(i) = (W_sigma(h).slice(i) * 
                         natural_params.W.slice(h).row(i).t()).t();
@@ -116,7 +130,7 @@ namespace splinetlsm {
 
         // coefficient weights
         for (uint k = 0; k < n_covariates; ++k) {
-            W_coefs_sigma.slice(k) = inv(
+            W_coefs_sigma.slice(k) = arma::inv(
                 natural_params.W_coefs_sigma.slice(k), arma::inv_opts::allow_approx);
             W_coefs.col(k) = (W_coefs_sigma.slice(k) * 
                 natural_params.W_coefs.col(k));
