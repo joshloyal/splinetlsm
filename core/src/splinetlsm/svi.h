@@ -10,7 +10,7 @@ namespace splinetlsm {
         ModelParams params;
         bool converged;
         arma::vec parameter_difference;
-        arma::vec insample_auc;
+        arma::vec loglik;
         uint n_iter;
     };
 

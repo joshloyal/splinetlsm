@@ -145,11 +145,11 @@ namespace splinetlsm {
         // calculate AUC on sampled dyads
         Moments new_moments = calculate_moments(new_params, B_sub);
         //double insample_auc = roc_auc_score(Y, X, new_moments, sample_info);
-        double insample_auc = log_likelihood(Y, X, new_moments, sample_info);
+        double loglik = log_likelihood(Y, X, new_moments, sample_info);
         
 
         //return {new_natural_params, new_params};
-        return {Params(new_natural_params, new_params), insample_auc};
+        return {Params(new_natural_params, new_params), loglik};
     }
 
 
@@ -184,32 +184,33 @@ namespace splinetlsm {
         // run stochastic gradient descent
         bool converged = false;
         uint n_converged = 0.;
-        double curr_avg_auc = 0.;
-        double prev_avg_auc = 0.;
+        double curr_avg_loglik = 0.;
+        double prev_avg_loglik = 0.;
         arma::vec param_diff(max_iter);
-        arma::vec insample_auc(max_iter);
+        arma::vec logliks(max_iter);
         uint n_iter = 0;
         for (uint iter = 0; iter < max_iter; ++iter) {
             //Params new_params = svi.update(Y, B, X, time_points, params);            
-            auto [new_params, auc] = svi.update(Y, B, X, time_points, params);            
+            auto [new_params, loglik] = svi.update(
+                    Y, B, X, time_points, params);            
             
             // check for convergence
 
             // XXX: - overloaded to calculate the absolute value 
             //      of the difference of natural parameters
             param_diff(iter) = new_params.natural - params.natural;
-            insample_auc(iter) = auc;
+            logliks(iter) = loglik;
             params = new_params;
             
             if((iter >= MIN_ITER) && 
                     (iter >= 2 * WINDOW_SIZE) && (iter % WINDOW_SIZE == 0)) {
-                curr_avg_auc = arma::median(
-                    insample_auc.rows(iter - WINDOW_SIZE, iter));
-                prev_avg_auc = arma::median(
-                    insample_auc.rows(
+                curr_avg_loglik = arma::median(
+                    logliks.rows(iter - WINDOW_SIZE, iter));
+                prev_avg_loglik = arma::median(
+                    logliks.rows(
                         iter - 2 * WINDOW_SIZE, iter - WINDOW_SIZE));
 
-                if(fabs(curr_avg_auc - prev_avg_auc) < tol) {
+                if(fabs(curr_avg_loglik - prev_avg_loglik) < tol) {
                     n_converged += 1;
                 } else {
                     n_converged = 0;
@@ -225,8 +226,8 @@ namespace splinetlsm {
         }
         
         param_diff.resize(n_iter);
-        insample_auc.resize(n_iter);
+        logliks.resize(n_iter);
 
-        return {params.model, converged, param_diff, insample_auc, n_iter + 1};
+        return {params.model, converged, param_diff, logliks, n_iter + 1};
     }
 }
