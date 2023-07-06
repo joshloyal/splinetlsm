@@ -27,6 +27,17 @@ def avg_degree(y_vec):
     return degree(y_vec).mean(axis=0)
 
 
+def node_degree(y_vec, node_id=0):
+    n_time_steps = y_vec.shape[0]
+    
+    def stat_fun(carry, t):
+        Y = sgof.vec_to_adjacency(y_vec[t])
+        return None, Y[node_id].sum()
+    _, res = jax.lax.scan(stat_fun, None, jnp.arange(n_time_steps))
+    
+    return res.astype(int)
+
+
 def density(y_vec):
     return y_vec.mean(axis=1)
 

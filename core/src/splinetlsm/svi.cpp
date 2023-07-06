@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 #include <utility>
 
 #include "splinetlsm.h"
@@ -28,7 +29,14 @@ namespace splinetlsm {
 
         // update step size
         iter_idx_ += 1;
-        double step_size = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
+        step_size_ = pow(iter_idx_ * step_size_delay_ + 1, -step_size_power_); 
+        
+        //double min_lr = 1e-2;
+        //double max_lr = 0.5;
+        //double cycle_length = 100.;
+        //uint cycle = std::floor(1 + iter_idx_ / (2. * cycle_length));
+        //double x = fabs(iter_idx_ / cycle_length - 2 * cycle + 1);
+        //step_size_ = min_lr + (max_lr - min_lr) * fmax(0, 1 - x);
 
         //------- Sample Dyads ----------------------------------------------//
         
@@ -65,12 +73,12 @@ namespace splinetlsm {
                 
                 // take a gradient step
                 new_natural_params.W.slice(h).row(i) = (
-                        (1 - step_size) * params.natural.W.slice(h).row(i) + 
-                            step_size * grad_mean.t());
+                        (1 - step_size_) * params.natural.W.slice(h).row(i) + 
+                            step_size_ * grad_mean.t());
 
                 new_natural_params.W_sigma(h).slice(i) = (
-                        (1 - step_size) * params.natural.W_sigma(h).slice(i) + 
-                            step_size * grad_prec);
+                        (1 - step_size_) * params.natural.W_sigma(h).slice(i) + 
+                            step_size_ * grad_prec);
     
             }
             
@@ -91,12 +99,12 @@ namespace splinetlsm {
             
             // take a gradient step
             new_natural_params.W_coefs.col(k) = (
-                    (1 - step_size) * params.natural.W_coefs.col(k) + 
-                        step_size * grad_mean);
+                    (1 - step_size_) * params.natural.W_coefs.col(k) + 
+                        step_size_ * grad_mean);
 
             new_natural_params.W_coefs_sigma.slice(k) = (
-                    (1 - step_size) * params.natural.W_coefs_sigma.slice(k) +
-                        step_size * grad_prec);
+                    (1 - step_size_) * params.natural.W_coefs_sigma.slice(k) +
+                        step_size_ * grad_prec);
         }
 
         
@@ -109,7 +117,7 @@ namespace splinetlsm {
                 config_.diff_matrix, config_.penalty_matrix, i);
 
             new_natural_params.b(i) = (
-                (1 - step_size) * params.natural.b(i) + step_size * grad_b);
+                (1 - step_size_) * params.natural.b(i) + step_size_ * grad_b);
             
         }
 
@@ -121,8 +129,8 @@ namespace splinetlsm {
 
             
             new_natural_params.b_coefs(k) = (
-                (1 - step_size) * params.natural.b_coefs(k) + 
-                    step_size * grad_b);
+                (1 - step_size_) * params.natural.b_coefs(k) + 
+                    step_size_ * grad_b);
         }
 
         // update MGP parameters: q(nu_h)
@@ -135,8 +143,8 @@ namespace splinetlsm {
                 config_.penalty_matrix, config_.penalty_order, h);
 
             new_natural_params.mgp_rate(h) = (
-                (1 - step_size) * params.natural.mgp_rate(h) + 
-                    step_size * grad_rate);
+                (1 - step_size_) * params.natural.mgp_rate(h) + 
+                    step_size_ * grad_rate);
         }
  
         // transform natural parameters to standard parameters
@@ -188,6 +196,7 @@ namespace splinetlsm {
         double prev_avg_loglik = 0.;
         arma::vec param_diff(max_iter);
         arma::vec logliks(max_iter);
+        arma::vec step_size(max_iter);
         uint n_iter = 0;
         for (uint iter = 0; iter < max_iter; ++iter) {
             //Params new_params = svi.update(Y, B, X, time_points, params);            
@@ -200,7 +209,9 @@ namespace splinetlsm {
             //      of the difference of natural parameters
             param_diff(iter) = new_params.natural - params.natural;
             logliks(iter) = loglik;
+            step_size(iter) = svi.step_size_;
             params = new_params;
+            n_iter = iter; 
             
             if((iter >= MIN_ITER) && 
                     (iter >= 2 * WINDOW_SIZE) && (iter % WINDOW_SIZE == 0)) {
@@ -222,12 +233,12 @@ namespace splinetlsm {
                 break;
             }
 
-            n_iter = iter; 
         }
         
         param_diff.resize(n_iter);
         logliks.resize(n_iter);
+        step_size.resize(n_iter);
 
-        return {params.model, converged, param_diff, logliks, n_iter + 1};
+        return {params.model, converged, param_diff, logliks, step_size, n_iter + 1};
     }
 }

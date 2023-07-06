@@ -114,7 +114,8 @@ def optimize_elbo_svi(Y, B, time_points, X,
         'converged': result.converged,
         'n_iter': result.n_iter,
         'diffs': to_1d_ndarray(result.parameter_difference),
-        'loglik': to_1d_ndarray(result.loglik)
+        'loglik': to_1d_ndarray(result.loglik),
+        'step_size': to_1d_ndarray(result.step_size)
     }
 
     mom = calculate_moments(result.params, B_arma)

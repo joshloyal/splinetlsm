@@ -11,6 +11,7 @@ namespace splinetlsm {
         bool converged;
         arma::vec parameter_difference;
         arma::vec loglik;
+        arma::vec step_size;
         uint n_iter;
     };
 
@@ -23,7 +24,9 @@ namespace splinetlsm {
         std::pair<Params, double>
         update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X, 
             const arma::vec& time_points, Params& params);
-        
+    public: 
+        double step_size_;
+
     private:
         ModelConfig config_;
         DyadSampler dyad_sampler_;

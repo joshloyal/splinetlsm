@@ -53,6 +53,7 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
         bool converged
         vec parameter_difference
         vec loglik
+        vec step_size
         uint n_iter
 
     cdef void set_spcube_value(field[sp_mat]& Y, sp_mat& B, uint index) 

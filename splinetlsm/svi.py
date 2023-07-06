@@ -199,6 +199,7 @@ class SplineDynamicLSM(object):
         self.n_iter_ = diagnostics['n_iter']
         self.diffs_ = diagnostics['diffs']
         self.loglik_ = diagnostics['loglik']
+        self.step_size_ = diagnostics['step_size']
 
         # unpack parameters and moments
         self.W_ = params['W']
