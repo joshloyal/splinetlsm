@@ -31,13 +31,6 @@ namespace splinetlsm {
         iter_idx_ += 1;
         step_size_ = pow(iter_idx_ * step_size_delay_ + 1, -step_size_power_); 
         
-        //double min_lr = 1e-2;
-        //double max_lr = 0.5;
-        //double cycle_length = 100.;
-        //uint cycle = std::floor(1 + iter_idx_ / (2. * cycle_length));
-        //double x = fabs(iter_idx_ / cycle_length - 2 * cycle + 1);
-        //step_size_ = min_lr + (max_lr - min_lr) * fmax(0, 1 - x);
-
         //------- Sample Dyads ----------------------------------------------//
         
         // sub-sample time indices and dyads
