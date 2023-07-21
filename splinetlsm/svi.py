@@ -1,6 +1,7 @@
 import numpy as np
 import jax.numpy as jnp
 import numpyro.distributions as dist
+import scipy.sparse as sp
 
 from jax import random, vmap
 from numpyro.contrib.control_flow import scan
@@ -158,6 +159,12 @@ class SplineDynamicLSM(object):
         tol : float
             Tolerance to determine convergence of the SVI algorithm
         """
+        if isinstance(Y, np.ndarray):
+            self.Y_fit_ = []
+            for t in range(Y.shape[0]):
+                self.Y_fit_.append(sp.csc_matrix(Y[t]))
+        else:
+            self.Y_fit_ = Y
 
         n_time_steps = time_points.shape[0]
         n_nodes = Y[0].shape[0]
@@ -179,7 +186,7 @@ class SplineDynamicLSM(object):
                 self.time_points_, n_knots=self.n_knots_, degree=self.degree)
         
         params, moments, diagnostics = optimize_elbo_svi(
-                Y, self.B_fit_, time_points, self.X_fit_,
+                self.Y_fit_, self.B_fit_, time_points, self.X_fit_,
                 n_features=self.n_features,
                 penalty_order=self.penalty_order,
                 coefs_penalty_order=self.coefs_penalty_order,
@@ -237,7 +244,7 @@ class SplineDynamicLSM(object):
         
         # calculate in-sample AUC
         self.probas_ = self.predict_proba()
-        self.auc_ = calculate_auc(Y, self.probas_)
+        self.auc_ = calculate_auc(self.Y_fit_, self.probas_)
         
 
         return self
