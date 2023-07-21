@@ -136,8 +136,8 @@ class SplineDynamicLSM(object):
 
     def fit(self, Y, time_points, X=None, 
             nonedge_proportion=1, n_time_points=0.5, n_samples=2000,
-            step_size_delay=1,  step_size_power=0.5,  # 1 / sqrt(T) step size for non-convex optimization 
-            max_iter=1000, tol=1e-3):
+            step_size_delay=0.5,  step_size_power=0.5,  # 1 / sqrt(T) step size for non-convex optimization 
+            max_iter=500, tol=1e-3):
         """
         Parameters
         ----------

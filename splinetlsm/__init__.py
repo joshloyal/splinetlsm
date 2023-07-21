@@ -1,1 +1,1 @@
-from .mcmc import SplineDynamicLSM
+from .svi import SplineDynamicLSM
