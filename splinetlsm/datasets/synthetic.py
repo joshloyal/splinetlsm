@@ -5,6 +5,7 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.utils import check_random_state
 from numpyro.distributions.util import vec_to_tril_matrix
 
+from ..bspline import bspline_basis
 from ..static_gof import vec_to_adjacency
 
 __all__ = ['synthetic_network', 'synthetic_network_mixture']
@@ -15,17 +16,59 @@ def tril_vec_to_matrix(x):
     return A + A.T
 
 
-def synthetic_network(n_nodes=50, n_time_points=20, n_features=2, intercept=-1, 
-        include_covariates=False, length_scale=0.1, random_state=42):
-    time_points = np.arange(n_time_points) / (n_time_points - 1) 
-
-    cov = 2 * RBF(length_scale=length_scale)(time_points.reshape(-1, 1))
-    
+def generate_gp(time_points, n_nodes=100, n_features=2, length_scale=0.2, random_state=None):
     rng = check_random_state(random_state)
     
+    # RBF GP
+    n_time_points = time_points.shape[0]
+    cov = RBF(length_scale=length_scale)(time_points.reshape(-1, 1)) 
     U = rng.multivariate_normal(
             mean=np.zeros(n_time_points), cov=cov, size=(n_nodes, n_features))
     U = U.transpose((2, 0, 1))
+    
+    return U
+
+
+def generate_bspline(time_points, 
+        n_nodes=100, n_features=2, n_knots=10, degree=3, 
+        tau=2, sigma=0.05, random_state=None):
+    rng = check_random_state(random_state)
+    
+    B, _ = bspline_basis(
+        time_points, n_knots=n_knots, degree=degree, return_sparse=False)
+     
+    # Gaussian Random-Walk
+    W0 = tau * rng.randn(n_nodes, n_features, 1)
+    W = W0 + np.cumsum(
+            sigma * rng.randn(n_nodes, n_features, B.shape[0]), 
+            axis=-1)
+
+    return (W @ B).transpose((2, 0, 1))
+
+
+
+def synthetic_network(n_nodes=50, n_time_points=20, n_features=2, intercept=-4, 
+        ls_type='bspline', include_covariates=False, length_scale=0.2, 
+        tau=2, sigma=0.05, random_state=42):
+    rng = check_random_state(random_state)
+    time_points = np.arange(n_time_points) / (n_time_points - 1) 
+
+    #cov = 2 * RBF(length_scale=length_scale)(time_points.reshape(-1, 1))
+    #
+    #rng = check_random_state(random_state)
+    #
+    #U = rng.multivariate_normal(
+    #        mean=np.zeros(n_time_points), cov=cov, size=(n_nodes, n_features))
+    #U = U.transpose((2, 0, 1))
+    
+    if ls_type == 'bspline':
+        U = generate_bspline(
+            time_points, n_nodes=n_nodes, n_features=2, 
+            tau=tau, sigma=sigma, random_state=rng)
+    else:
+        U = generate_gp(
+            time_points, n_nodes=n_nodes, n_features=2, 
+            length_scale=length_scale, random_state=rng)
     
     # covariates
     if include_covariates:
@@ -54,22 +97,25 @@ def synthetic_network(n_nodes=50, n_time_points=20, n_features=2, intercept=-1,
     return Y, time_points, X, probas, U
 
 
-def synthetic_network_mixture(n_nodes=50, n_time_points=20, intercept=-1, 
-        include_covariates=False, length_scale=0.1, random_state=42):
-    time_points = np.arange(n_time_points) / (n_time_points - 1) 
-
-    cov = RBF(length_scale=length_scale)(time_points.reshape(-1, 1))
-
-    rng = check_random_state(random_state)
+def synthetic_network_mixture(n_nodes=50, n_time_points=20, intercept=-4, 
+        include_covariates=False, ls_type='bspline',
+        tau=0.25, sigma=0.25, length_scale=0.2, random_state=42):
     
+    rng = check_random_state(random_state)
+    time_points = np.arange(n_time_points) / (n_time_points - 1) 
+    
+    if ls_type == 'bspline':
+        U = generate_bspline(
+            time_points, n_nodes=n_nodes, n_features=2, 
+            tau=tau, sigma=sigma, random_state=rng)
+    else:
+        U = generate_gp(
+            time_points, n_nodes=n_nodes, n_features=2, 
+            length_scale=length_scale, random_state=rng)
+ 
     # latent space
     centers = np.array([[1.5, 0.],
                         [-1.5, 0.]])
-
-    U = rng.multivariate_normal(
-            mean=np.zeros(n_time_points), cov=cov, size=(n_nodes, 2))
-    U = U.transpose((2, 0, 1))
-    
     z = rng.choice([0, 1], size=n_nodes)
     for t in range(n_time_points):
         U[t] += centers[z]

@@ -19,10 +19,10 @@ namespace splinetlsm {
             mgp_shape(config.n_features) {
         
         
-        //for (uint h = 0; h < config.n_features; ++h) {
-        //    arma::rowvec means = arma::mean(W.slice(h), 0);
-        //    W.slice(h).each_row() -= means;
-        //}
+        for (uint h = 0; h < config.n_features; ++h) {
+            W.slice(h) = arma::cumsum(0.1 * W.slice(h), 1);
+        }
+
 
         // initialize covariances to the identity
         W_sigma.fill(arma::cube(config.n_knots, config.n_knots, config.n_nodes, 
@@ -35,7 +35,13 @@ namespace splinetlsm {
         }
         
         // intercept initialized to the average density of the network
-        W_coefs.col(0).fill(logit(arma::mean(config.density)));
+        for (uint k = 0; k < config.n_covariates; ++k) {
+            if (k == 0) {
+                W_coefs.col(0).fill(logit(arma::mean(config.density)));
+            } else {
+                W_coefs.col(k) = arma::cumsum(W_coefs.col(k));
+            }
+        }
 
         for (uint k = 0; k < config.n_covariates; ++k) {
             W_coefs_sigma.slice(k) = arma::eye(config.n_knots, config.n_knots);
