@@ -156,7 +156,9 @@ namespace splinetlsm {
 
     SVIResult optimize_elbo(
             const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
-            const arma::vec& time_points, uint n_features,
+            const arma::vec& time_points, 
+            arma::cube& W_init, arma::mat& W_coefs_init,
+            uint n_features,
             uint penalty_order, uint coefs_penalty_order, 
             double rate_prior, double shape_prior,
             double coefs_rate_prior, double coefs_shape_prior,
@@ -180,7 +182,7 @@ namespace splinetlsm {
                 step_size_delay, step_size_power);
         
         // initial parameter values
-        Params params(config);
+        Params params(config, W_init, W_coefs_init);
         
         // run stochastic gradient descent
         bool converged = false;

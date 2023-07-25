@@ -47,6 +47,7 @@ cdef np.ndarray to_4d_ndarray(field[cube] arma_array):
 
 
 def optimize_elbo_svi(Y, B, time_points, X,
+        W_init, W_coefs_init,
         n_features=2, penalty_order=1, coefs_penalty_order=2,
         rate_prior=2., shape_prior=1., 
         coefs_rate_prior=2., coefs_shape_prior=1.,
@@ -60,6 +61,8 @@ def optimize_elbo_svi(Y, B, time_points, X,
     cdef field[sp_mat] Y_arma = to_sparse_cube(Y)
     cdef sp_mat B_arma = to_arma_csc(B)
     cdef field[cube] X_arma
+    cdef cube W_init_arma = to_arma_cube(W_init)
+    cdef mat W_coefs_init_arma = to_arma_mat(W_coefs_init)
     cdef vec time_points_arma = to_arma_vec(time_points)
 
     cdef ModelParams params
@@ -78,6 +81,7 @@ def optimize_elbo_svi(Y, B, time_points, X,
 
     result = optimize_elbo(
         Y_arma, B_arma, X_arma, time_points_arma,
+        W_init_arma, W_coefs_init_arma,
         n_features=n_features, 
         penalty_order=penalty_order, coefs_penalty_order=coefs_penalty_order,
         rate_prior=rate_prior, shape_prior=shape_prior, 

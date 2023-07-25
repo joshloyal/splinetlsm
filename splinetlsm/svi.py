@@ -8,8 +8,10 @@ from numpyro.contrib.control_flow import scan
 from math import ceil
 from jax.scipy.special import expit
 from sklearn.metrics import roc_auc_score
+from sklearn.utils import check_random_state
 
 from .bspline import bspline_basis
+from .initialize import initialize_parameters
 from ._svi import optimize_elbo_svi
 
 
@@ -118,6 +120,7 @@ class SplineDynamicLSM(object):
                  mgp_a2=3.,
                  tau_prec=1e-2,
                  coefs_tau_prec=1e-2,
+                 init_type='svt',
                  random_state=42):
         self.n_features = n_features
         self.n_knots = n_knots
@@ -132,6 +135,7 @@ class SplineDynamicLSM(object):
         self.mgp_a2 = mgp_a2
         self.tau_prec = tau_prec
         self.coefs_tau_prec = coefs_tau_prec
+        self.init_type = init_type
         self.random_state = random_state
 
     def fit(self, Y, time_points, X=None, 
@@ -185,8 +189,22 @@ class SplineDynamicLSM(object):
         self.B_fit_, self.bs_ = bspline_basis(
                 self.time_points_, n_knots=self.n_knots_, degree=self.degree)
         
+        if self.init_type == 'svt':
+            W_init, W_coefs_init = initialize_parameters(
+                self.Y_fit_, self.B_fit_, X=self.X_fit_, 
+                n_features=self.n_features, random_state=self.random_state)
+        else: 
+            rng = check_random_state(self.random_state)     
+            W_init = rng.randn(n_nodes, self.B_fit_.shape[0], self.n_features)
+
+            n_covariates = 1 if X is None else 1 + self.X_fit_.shape[-1]
+            W_coefs_init = rng.randn(self.B_fit_.shape[0], n_covariates)
+    
+        print(W_coefs_init)
+
         params, moments, diagnostics = optimize_elbo_svi(
                 self.Y_fit_, self.B_fit_, time_points, self.X_fit_,
+                W_init=W_init, W_coefs_init=W_coefs_init,
                 n_features=self.n_features,
                 penalty_order=self.penalty_order,
                 coefs_penalty_order=self.coefs_penalty_order,

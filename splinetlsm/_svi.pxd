@@ -7,7 +7,7 @@ cimport numpy as np
 from libcpp cimport bool
 
 from splinetlsm.armadillo cimport mat, sp_mat, field, cube, vec
-from splinetlsm.armadillo cimport to_arma_csc, to_arma_cube, to_arma_vec
+from splinetlsm.armadillo cimport to_arma_csc, to_arma_cube, to_arma_vec, to_arma_mat
 from splinetlsm.armadillo cimport to_ndarray, to_1d_ndarray, to_3d_ndarray
 
 
@@ -65,6 +65,7 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
         const field[sp_mat]& Y, 
         const sp_mat& B, const field[cube]& X, 
         const vec& time_points, 
+        cube& W_init, mat& W_coefs_init,
         uint n_features, 
         uint penalty_order, uint coefs_penalty_order,
         double rate_prior, double shape_prior, 

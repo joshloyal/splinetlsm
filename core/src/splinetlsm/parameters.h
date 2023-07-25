@@ -66,6 +66,7 @@ namespace splinetlsm {
     class Params {
     public:
         Params(ModelConfig& config);
+        Params(ModelConfig& config, arma::cube& W_init, arma::mat& W_coefs_init);
         Params(NaturalParams& natural, ModelParams& model);
 
     public:

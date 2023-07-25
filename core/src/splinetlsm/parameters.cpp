@@ -148,6 +148,16 @@ namespace splinetlsm {
     
     Params::Params(ModelConfig& config) : 
         natural(config), model(natural) {}
+    
+    Params::Params(ModelConfig& config, arma::cube& W_init, arma::mat& W_coefs_init) : 
+        natural(config), model(natural) {
+        
+        natural.W = W_init;
+        model.W = W_init;
+
+        natural.W_coefs = W_coefs_init;
+        model.W_coefs = W_coefs_init;
+    }
 
     Params::Params(NaturalParams& natural, ModelParams& model) :
         natural(natural), model(model) {}
