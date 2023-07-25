@@ -106,9 +106,17 @@ def calculate_auc(Y, probas):
 
 
 class SplineDynamicLSM(object):
+    """SplineDynamicLSM
+
+    Parameters
+    ----------
+    n_segments: int
+    The number of equally sized segements between [0, 1]. The number of knots
+    is n_segments + degree.
+    """
     def __init__(self,
                  n_features=2,
-                 n_knots='auto',
+                 n_segments='auto',
                  degree=3,
                  penalty_order=1,
                  coefs_penalty_order=1,
@@ -120,10 +128,10 @@ class SplineDynamicLSM(object):
                  mgp_a2=3.,
                  tau_prec=1e-2,
                  coefs_tau_prec=1e-2,
-                 init_type='svt',
+                 init_type='usvt',
                  random_state=42):
         self.n_features = n_features
-        self.n_knots = n_knots
+        self.n_segments = n_segments
         self.degree = degree
         self.penalty_order = penalty_order
         self.coefs_penalty_order = coefs_penalty_order
@@ -178,18 +186,20 @@ class SplineDynamicLSM(object):
         else:
             self.n_time_points_ = min(n_time_points, n_time_steps)
         
-        if self.n_knots == 'auto':
-            self.n_knots_ = (n_time_steps if n_time_steps < 25 else 
+        if self.n_segments == 'auto':
+            self.n_segments_ = (n_time_steps - 1 if n_time_steps < 25 else 
                 ceil(min(n_time_steps / 4, 40)))
         else:
-            self.n_knots_ = self.n_knots
+            self.n_segments_ = self.n_segments
+        self.n_knots_ = self.n_segments_ + self.degree
         
         self.X_fit_ = X
         self.time_points_ = time_points
         self.B_fit_, self.bs_ = bspline_basis(
-                self.time_points_, n_knots=self.n_knots_, degree=self.degree)
+                self.time_points_, n_segments=self.n_segments_, 
+                degree=self.degree)
         
-        if self.init_type == 'svt':
+        if self.init_type == 'usvt':
             W_init, W_coefs_init = initialize_parameters(
                 self.Y_fit_, self.B_fit_, X=self.X_fit_, 
                 n_features=self.n_features, random_state=self.random_state)
@@ -200,8 +210,6 @@ class SplineDynamicLSM(object):
             n_covariates = 1 if X is None else 1 + self.X_fit_.shape[-1]
             W_coefs_init = rng.randn(self.B_fit_.shape[0], n_covariates)
     
-        print(W_coefs_init)
-
         params, moments, diagnostics = optimize_elbo_svi(
                 self.Y_fit_, self.B_fit_, time_points, self.X_fit_,
                 W_init=W_init, W_coefs_init=W_coefs_init,

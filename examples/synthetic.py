@@ -6,7 +6,7 @@ from splinetlsm.datasets import synthetic_network_mixture
 from splinetlsm.mcmc import dynamic_adjacency_to_vec
 
 n_nodes = 50
-n_time_points = 50
+n_time_points = 100
 
 Y, time_points, X, probas, _ = synthetic_network_mixture(
     n_nodes=n_nodes, n_time_points=n_time_points,
@@ -16,10 +16,11 @@ Y, time_points, X, probas, _ = synthetic_network_mixture(
 y_true = dynamic_adjacency_to_vec(Y)
 print("Density: {:.3f}".format(y_true.mean()))
 
-model = SplineDynamicLSM(n_features=2, n_knots=20, random_state=4, init_type='svt')
+model = SplineDynamicLSM(n_features=2, n_knots=20, random_state=4, init_type='usvt')
 model.fit(Y, time_points, X, n_time_points=0.1)
 print(model.n_iter_)
 print(model.intercept_)
+print(model.coefs_)
 
 print("Best AUC: {:.3f}".format(roc_auc_score(y_true.ravel(), probas.ravel())))
 print("Model AUC: {:.3f}".format(model.auc_))
