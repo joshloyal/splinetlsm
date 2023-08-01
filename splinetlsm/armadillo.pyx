@@ -14,7 +14,7 @@ def get_armadillo_version():
     return arma_ver.as_string()
 
 
-cdef mat to_arma_mat(np.ndarray[np.double_t, ndim=2] np_array):
+cdef mat to_arma_mat(np.ndarray[np.double_t, ndim=2] np_array, bool copy=True):
     """Converts a numpy ndarray to an arma::mat. A copy of the array  is made
     if it either does not own its data or that data is stored in
     c-ordered format. Note that c-ordered is the default format
@@ -22,9 +22,13 @@ cdef mat to_arma_mat(np.ndarray[np.double_t, ndim=2] np_array):
     """
     if np_array.flags.c_contiguous or not np_array.flags.owndata:
         np_array = np_array.copy(order='F')
-
-    return mat(<double*>np_array.data,
-               np_array.shape[0], np_array.shape[1], False, True)
+    
+    if copy:
+        return mat(<double*>np_array.data,
+                   np_array.shape[0], np_array.shape[1], True, False)
+    else:
+        return mat(<double*>np_array.data,
+                   np_array.shape[0], np_array.shape[1], False, True)
 
 
 cdef np.ndarray[np.double_t, ndim=2] to_ndarray(const mat& arma_mat):
@@ -133,14 +137,17 @@ cdef np.ndarray[np.int_t, ndim=1] to_1d_int_ndarray(const ivec& arma_vec):
     return np_array
 
 
-cdef uvec to_arma_uvec(np.ndarray[INDEX_T, ndim=1] np_array):
+cdef uvec to_arma_uvec(np.ndarray[INDEX_T, ndim=1] np_array, bool copy=True):
     """Converts a 1d numpy array to an arma::uvec. Data is copied if
     the array does not own its data.
     """
     if not np_array.flags.owndata:
         np_array = np_array.copy(order='F')
-
-    return uvec(<uword*> np_array.data, np_array.shape[0], False, True)
+    
+    if copy:
+        return uvec(<uword*> np_array.data, np_array.shape[0], True, False)
+    else:
+        return uvec(<uword*> np_array.data, np_array.shape[0], False, True)
 
 
 cdef np.ndarray[np.int_t, ndim=1] to_1d_uint_ndarray(const uvec& arma_vec):
@@ -165,7 +172,7 @@ cdef np.ndarray[np.int_t, ndim=1] to_1d_uint_ndarray(const uvec& arma_vec):
     return np_array
 
 
-cdef sp_mat to_arma_csc(csc_mat):
+cdef sp_mat to_arma_csc(csc_mat, bool copy=True):
     # extract csc information
     # XXX: For some reason we need to convert to int64. Why?!
     cdef np.ndarray[np.int64_t, ndim=1] indices = csc_mat.indices.astype('int64')
@@ -175,14 +182,14 @@ cdef sp_mat to_arma_csc(csc_mat):
     cdef int n_cols = csc_mat.shape[1]
 
     # convert to armadillo data structures
-    cdef uvec rowind = to_arma_uvec(indices)
-    cdef uvec colptr = to_arma_uvec(indptr)
-    cdef vec values = to_arma_vec(data, copy=True)
+    cdef uvec rowind = to_arma_uvec(indices, copy=copy)
+    cdef uvec colptr = to_arma_uvec(indptr, copy=copy)
+    cdef vec values = to_arma_vec(data, copy=copy)
 
     return sp_mat(rowind, colptr, values, n_rows, n_cols, True)
 
 
-cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array):
+cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array, bool copy=True):
     """Converts a numpy ndarray to an arma::cube. A copy of the array is made
     if it either does not own its data or that data is stored in
     c-ordered format. Note that c-ordered is the default format
@@ -190,10 +197,15 @@ cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array):
     """
     if np_array.flags.c_contiguous or not np_array.flags.owndata:
         np_array = np_array.copy(order='F')
-
-    return cube(<double*>np_array.data,
-               np_array.shape[0], np_array.shape[1], np_array.shape[2],
-               False, True)
+    
+    if copy:
+        return cube(<double*>np_array.data,
+                   np_array.shape[0], np_array.shape[1], np_array.shape[2],
+                   True, False)
+    else:
+        return cube(<double*>np_array.data,
+                   np_array.shape[0], np_array.shape[1], np_array.shape[2],
+                   False, True)
 
 
 cdef np.ndarray[np.double_t, ndim=3] to_3d_ndarray(const cube& arma_cube):

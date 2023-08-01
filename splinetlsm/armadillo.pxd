@@ -112,7 +112,7 @@ cdef extern from "armadillo" namespace "arma" nogil:
     cdef sp_mat speye(int n_rows, int n_cols);
 
 # convert to a numpy ndarray to an arma::mat
-cdef mat to_arma_mat(np.ndarray[np.double_t, ndim=2] np_array)
+cdef mat to_arma_mat(np.ndarray[np.double_t, ndim=2] np_array, bool copy=*)
 
 # convert from an arma::mat to a numpy ndarray
 cdef np.ndarray[np.double_t, ndim=2] to_ndarray(const mat& arma_mat)
@@ -130,16 +130,16 @@ cdef np.ndarray[np.double_t, ndim=1] to_1d_ndarray(const vec& arma_vec)
 cdef np.ndarray[np.int_t, ndim=1] to_1d_int_ndarray(const ivec& arma_vec)
 
 # convert an numpy ndarray to an arma::vec
-cdef uvec to_arma_uvec(np.ndarray[INDEX_T, ndim=1] np_array)
+cdef uvec to_arma_uvec(np.ndarray[INDEX_T, ndim=1] np_array, bool copy=*)
 
 # convert from an arma::uvec to a numpy ndarray
 cdef np.ndarray[np.int_t, ndim=1] to_1d_uint_ndarray(const uvec& arma_vec)
 
 # sparse matrices
-cdef sp_mat to_arma_csc(m)
+cdef sp_mat to_arma_csc(m, bool copy=*)
 
 # convert to a numpy ndarray to an arma::cube
-cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array)
+cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array, bool copy=*)
 
 # convert from an arma::cube to a numpy ndarray
 cdef np.ndarray[np.double_t, ndim=3] to_3d_ndarray(const cube& arma_cube)
