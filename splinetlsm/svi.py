@@ -15,21 +15,21 @@ from .initialize import initialize_parameters
 from ._svi import optimize_elbo_svi
 
 
-#def predict_probas(X, moments):
-#    n_nodes, n_time_steps, _ = moments['U'].shape 
-#    subdiag = np.tril_indices(n_nodes, k=-1)
-#
-#    probas = []
-#    for t in range(n_time_steps):
-#        U = moments['U'][:, t, :]
-#        coefs = moments['coefs'][:, t]
-#
-#        probas.append(expit((X[t] @ coefs + U @ U.T)[subdiag]))
-#    
-#    return np.vstack(probas)
+def predict_proba_param(X, U, intercept, coefs):
+    n_time_steps, n_nodes, _ = U.shape 
+    subdiag = np.tril_indices(n_nodes, k=-1)
+
+    probas = []
+    for t in range(n_time_steps):
+        eta = intercept[t] + (U[t] @ U[t].T)[subdiag]
+        if X is not None:
+            eta += (X[t] @ coefs[t])[subdiag]
+        probas.append(expit(eta))
+    
+    return np.vstack(probas)
 
 
-def predict_proba(samples, X, B):
+def predict_proba_sample(samples, X, B):
     n_nodes = samples['W'].shape[0]
     n_time_points = B.shape[-1]
     
@@ -239,7 +239,7 @@ class SplineDynamicLSM(object):
         self.W_sigma_ = params['W_sigma']
         self.b_ = params['b']
         self.w_prec_ = moments['w_prec']
-        self.U_ = moments['U']
+        self.U_ = moments['U'].transpose((1, 0, 2))
 
         self.W_intercept_ = params['W_intercept']
         self.W_intercept_sigma_ = params['W_intercept_sigma']
@@ -252,7 +252,7 @@ class SplineDynamicLSM(object):
             self.W_coefs_sigma_ = params['W_coefs_sigma']
             self.b_coefs_ = params['b_coefs']
             self.w_coefs_prec_ = moments['w_coefs_prec']
-            self.coefs_ = moments['coefs']
+            self.coefs_ = moments['coefs'].T
         
         self.gamma_ = moments['gamma']
 
@@ -300,10 +300,15 @@ class SplineDynamicLSM(object):
 
         return samples
     
-    def predict_proba(self):
+    def predict_proba(self, estimator='param_mean'):
+    
         X = None if self.X_fit_ is None else jnp.array(self.X_fit_)
+        
+        if estimator == 'param_mean':
+            return predict_proba_param(X, self.U_, self.intercept_, self.coefs_)
+        
         return vmap(
-            lambda samples : predict_proba(samples, 
+            lambda samples : predict_proba_sample(samples, 
                 X, jnp.array(self.B_fit_.todense()))
             )(self.samples_).mean(axis=0)
     
