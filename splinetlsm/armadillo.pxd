@@ -4,6 +4,7 @@
 import numpy as np
 cimport numpy as np
 
+from libcpp.string cimport string
 from libcpp cimport bool
 
 
@@ -19,23 +20,26 @@ ctypedef fused INDEX_T:
 cdef extern from "armadillo" namespace "arma" nogil:
     ctypedef unsigned int uword
     ctypedef int sword
-    
+
+    cdef struct arma_version:
+        string as_string()
+
     cdef cppclass field[T]:
         field() nogil
         field(uword i) nogil
 
         T& operator()(const uword i) nogil
         #const T& operator()(const uword i) const
-        
+
         int n_elem
 
     cdef cppclass cube:
         cube() nogil
-        cube(double * aux_mem, int n_rows, int n_cols, int n_slices, 
+        cube(double * aux_mem, int n_rows, int n_cols, int n_slices,
              bool copy_aux_mem, bool strict) nogil
 
         double * memptr() nogil
-        
+
         int n_rows
         int n_cols
         int n_slices
@@ -104,7 +108,7 @@ cdef extern from "armadillo" namespace "arma" nogil:
         int n_cols
         int n_elem
         int n_nonzero
-    
+
     cdef sp_mat speye(int n_rows, int n_cols);
 
 # convert to a numpy ndarray to an arma::mat
@@ -117,7 +121,7 @@ cdef np.ndarray[np.double_t, ndim=2] to_ndarray(const mat& arma_mat)
 cdef np.ndarray[np.int_t, ndim=2] to_uint_ndarray(const umat& arma_mat)
 
 # convert from a numpy ndarray to an arma::vec
-cdef vec to_arma_vec(np.ndarray[np.double_t, ndim=1] np_array)
+cdef vec to_arma_vec(np.ndarray[np.double_t, ndim=1] np_array, bool copy=*)
 
 # convert from an arma::vec to a numpy ndarray
 cdef np.ndarray[np.double_t, ndim=1] to_1d_ndarray(const vec& arma_vec)

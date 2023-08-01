@@ -8,6 +8,12 @@ import numpy as np
 cimport numpy as np
 
 
+def get_armadillo_version():
+    cdef arma_version arma_ver
+
+    return arma_ver.as_string()
+
+
 cdef mat to_arma_mat(np.ndarray[np.double_t, ndim=2] np_array):
     """Converts a numpy ndarray to an arma::mat. A copy of the array  is made
     if it either does not own its data or that data is stored in
@@ -70,14 +76,17 @@ cdef np.ndarray[np.int_t, ndim=2] to_uint_ndarray(const umat& arma_mat):
 
     return np_array
 
-cdef vec to_arma_vec(np.ndarray[np.double_t, ndim=1] np_array):
+cdef vec to_arma_vec(np.ndarray[np.double_t, ndim=1] np_array, bool copy=False):
     """Converts a 1d numpy array to an arma::vec. Data is copied if
     the array does not own its data.
     """
     if not np_array.flags.owndata:
         np_array = np_array.copy(order='F')
-
-    return vec(<double*> np_array.data, np_array.shape[0], False, True)
+    
+    if copy:
+        return vec(<double*> np_array.data, np_array.shape[0], True, False)
+    else:
+        return vec(<double*> np_array.data, np_array.shape[0], False, True)
 
 
 cdef np.ndarray[np.double_t, ndim=1] to_1d_ndarray(const vec& arma_vec):
@@ -164,12 +173,12 @@ cdef sp_mat to_arma_csc(csc_mat):
     cdef np.ndarray[np.double_t, ndim=1] data = csc_mat.data
     cdef int n_rows = csc_mat.shape[0]
     cdef int n_cols = csc_mat.shape[1]
-    
+
     # convert to armadillo data structures
     cdef uvec rowind = to_arma_uvec(indices)
     cdef uvec colptr = to_arma_uvec(indptr)
-    cdef vec values = to_arma_vec(data)
-    
+    cdef vec values = to_arma_vec(data, copy=True)
+
     return sp_mat(rowind, colptr, values, n_rows, n_cols, True)
 
 
@@ -183,7 +192,7 @@ cdef cube to_arma_cube(np.ndarray[np.double_t, ndim=3] np_array):
         np_array = np_array.copy(order='F')
 
     return cube(<double*>np_array.data,
-               np_array.shape[0], np_array.shape[1], np_array.shape[2], 
+               np_array.shape[0], np_array.shape[1], np_array.shape[2],
                False, True)
 
 
