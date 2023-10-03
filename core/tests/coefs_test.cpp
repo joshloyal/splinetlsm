@@ -32,14 +32,14 @@ TEST_CASE("Coefficients", "[coefs]") {
     splinetlsm::Moments moments = splinetlsm::calculate_moments(
             params.model, B_sub); 
     arma::field<arma::vec> omega = splinetlsm::optimize_omega(
-            moments, X, sample_info);
+            moments, X, 0.95, sample_info);
 
     // calculate coefficient gradients
     arma::mat prior_precision = splinetlsm::calculate_coefs_prior_precision(
             moments.w_coefs_prec(0), config);
 
     auto [grad_mean, grad_prec] = calculate_coef_gradients(
-            Y, X, B_sub, moments, prior_precision, omega, sample_info, 0);
+            Y, X, B_sub, moments, prior_precision, omega, 0.95, sample_info, 0);
     
     uint n_knots = B.n_rows;
     REQUIRE(grad_mean.n_rows == n_knots);

@@ -37,7 +37,7 @@ namespace splinetlsm {
     
     SVIResult optimize_elbo(
             const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
-            const arma::vec& time_points, 
+            const arma::vec& time_points, double alpha,
             arma::cube &W_init, arma::mat& W_coefs_init,
             uint n_features=2,
             uint penalty_order=1, uint coefs_penalty_order=2, 

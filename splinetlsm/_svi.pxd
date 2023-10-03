@@ -64,7 +64,7 @@ cdef extern from "splinetlsm.h" namespace "splinetlsm" nogil:
     cdef SVIResult optimize_elbo(
         const field[sp_mat]& Y, 
         const sp_mat& B, const field[cube]& X, 
-        const vec& time_points, 
+        const vec& time_points, double alpha,
         cube& W_init, mat& W_coefs_init,
         uint n_features, 
         uint penalty_order, uint coefs_penalty_order,

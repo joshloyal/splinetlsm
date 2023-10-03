@@ -32,7 +32,7 @@ TEST_CASE("MGP h = 1", "[mgp]") {
     splinetlsm::Moments moments = splinetlsm::calculate_moments(
             params.model, B_sub); 
     arma::field<arma::vec> omega = splinetlsm::optimize_omega(
-            moments, X, sample_info);
+            moments, X, 0.95, sample_info);
     
     double grad_rate = splinetlsm::calculate_mgp_variance_gradient(
             params.model.W, params.model.W_sigma, params.model.mgp_rate,
@@ -69,7 +69,7 @@ TEST_CASE("MGP h > 1", "[mgp]") {
     splinetlsm::Moments moments = splinetlsm::calculate_moments(
             params.model, B_sub); 
     arma::field<arma::vec> omega = splinetlsm::optimize_omega(
-            moments, X, sample_info);
+            moments, X, 0.95, sample_info);
     
     double grad_rate = splinetlsm::calculate_mgp_variance_gradient(
             params.model.W, params.model.W_sigma, params.model.mgp_rate,

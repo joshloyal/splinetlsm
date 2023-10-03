@@ -32,7 +32,7 @@ TEST_CASE("Omega Single", "[omega]") {
             params.model, B_sub);
     
     arma::cube Xt = X(sample_info.time_indices(0));
-    double omega = splinetlsm::optimize_omega_single(moments, Xt, 0, 1, 0);
+    double omega = splinetlsm::optimize_omega_single(moments, Xt, 0.95, 0, 1, 0);
     
     REQUIRE(omega > 0.);
 }
@@ -63,7 +63,7 @@ TEST_CASE("Omega", "[omega]") {
             params.model, B_sub);
     
     arma::field<arma::vec> omega = splinetlsm::optimize_omega(
-            moments, X, sample_info);
+            moments, X, 0.95, sample_info);
     
     REQUIRE(omega.n_rows == n_time_steps);
     REQUIRE(omega.n_cols == n_nodes);

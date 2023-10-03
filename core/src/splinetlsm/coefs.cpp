@@ -18,7 +18,7 @@ namespace splinetlsm {
     std::pair<arma::vec, arma::mat> calculate_coef_gradients(
             const sp_cube& Y, const array4d& X, const arma::sp_mat& B, 
             Moments& moments, arma::mat& prior_precision, 
-            arma::field<arma::vec>& omega, 
+            arma::field<arma::vec>& omega, double alpha,
             SampleInfo& sample_info, uint k) {
         
         uint n_nodes = Y(0).n_rows;
@@ -46,7 +46,7 @@ namespace splinetlsm {
                 for (auto j : sample_info.dyad_indices(t, i)) {
                     //if (j < i) {
                     // get necessary variables to calculate gradients
-                    double z = Y(time_index)(i, j) - 0.5;
+                    double z = alpha * (Y(time_index)(i, j) - 0.5);
                     
                     arma::vec x = get_covariates(X(time_index), i, j);
                     arma::vec mu_j = moments.U.tube(j, t);

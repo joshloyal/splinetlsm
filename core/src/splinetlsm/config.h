@@ -10,7 +10,8 @@ namespace splinetlsm {
             double rate_prior=2, double shape_prior=1,
             double coefs_rate_prior=2, double coefs_shape_prior=1,
             double mgp_a1=2, double mgp_a2=3,
-            double tau_prec=0.01, double coefs_tau_prec=0.01);
+            double tau_prec=0.01, double coefs_tau_prec=0.01,
+            double alpha=0.95);
 
     public:   
         uint n_time_points;
@@ -32,6 +33,8 @@ namespace splinetlsm {
 
         double tau_prec;
         double coefs_tau_prec;
+
+        double alpha;
 
         arma::mat diff_matrix;
         arma::mat penalty_matrix;

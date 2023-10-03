@@ -29,7 +29,12 @@ namespace splinetlsm {
 
         // update step size
         iter_idx_ += 1;
-        step_size_ = pow(iter_idx_ * step_size_delay_ + 1, -step_size_power_); 
+        //if (iter_idx_ < 50) {
+        //    step_size_ = 0.7;
+        //} else {
+        //    step_size_ = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
+        //}
+        step_size_ = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
         
         //------- Sample Dyads ----------------------------------------------//
         
@@ -47,7 +52,8 @@ namespace splinetlsm {
         //------- Optimize Local Variables ----------------------------------//
         
         // update q(omega_ijt) for sampled dyads
-        arma::field<arma::vec> omega = optimize_omega(moments, X, sample_info);
+        arma::field<arma::vec> omega = optimize_omega(
+                moments, X, config_.alpha, sample_info);
  
 
         //------- Latent Position Spline Weights ----------------------------//
@@ -61,8 +67,8 @@ namespace splinetlsm {
 
             for (uint h = 0; h < config_.n_features; ++h) {
                 auto [grad_mean, grad_prec] = calculate_latent_position_gradients(
-                        Y, X, B_sub, moments, prior_precision, omega,
-                        sample_info, i, h);
+                        Y, X, B_sub, moments, prior_precision, omega, 
+                        config_.alpha, sample_info, i, h);
                 
                 // take a gradient step
                 new_natural_params.W.slice(h).row(i) = (
@@ -88,7 +94,7 @@ namespace splinetlsm {
             
             auto [grad_mean, grad_prec] = calculate_coef_gradients(
                     Y, X, B_sub, moments, prior_precision, omega,
-                    sample_info, k);
+                    config_.alpha, sample_info, k);
             
             // take a gradient step
             new_natural_params.W_coefs.col(k) = (
@@ -156,7 +162,7 @@ namespace splinetlsm {
 
     SVIResult optimize_elbo(
             const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
-            const arma::vec& time_points, 
+            const arma::vec& time_points, double alpha,
             arma::cube& W_init, arma::mat& W_coefs_init,
             uint n_features,
             uint penalty_order, uint coefs_penalty_order, 
@@ -175,7 +181,7 @@ namespace splinetlsm {
         ModelConfig config(Y, B, X, n_features, penalty_order, 
             coefs_penalty_order, rate_prior, shape_prior,
             coefs_rate_prior, coefs_shape_prior, 
-            mgp_a1, mgp_a2, tau_prec, coefs_tau_prec);
+            mgp_a1, mgp_a2, tau_prec, coefs_tau_prec, alpha);
         
         // initialize SVI algorithm
         SVI svi(config, nonedge_proportion, n_time_steps, 

@@ -46,7 +46,7 @@ cdef np.ndarray to_4d_ndarray(field[cube] arma_array):
     return np.asarray(out)
 
 
-def optimize_elbo_svi(Y, B, time_points, X,
+def optimize_elbo_svi(Y, B, time_points, X, alpha,
         W_init, W_coefs_init,
         n_features=2, penalty_order=1, coefs_penalty_order=2,
         rate_prior=2., shape_prior=1., 
@@ -80,7 +80,7 @@ def optimize_elbo_svi(Y, B, time_points, X,
         X_arma = to_arma_4d(X)
 
     result = optimize_elbo(
-        Y_arma, B_arma, X_arma, time_points_arma,
+        Y_arma, B_arma, X_arma, time_points_arma, alpha,
         W_init_arma, W_coefs_init_arma,
         n_features=n_features, 
         penalty_order=penalty_order, coefs_penalty_order=coefs_penalty_order,

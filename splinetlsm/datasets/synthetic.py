@@ -34,7 +34,7 @@ def generate_bspline(time_points,
         tau=2, sigma=0.05, random_state=None):
     rng = check_random_state(random_state)
     
-    B, _ = bspline_basis(
+    B = bspline_basis(
         time_points, n_segments=n_segments, degree=degree, return_sparse=False)
      
     # Gaussian Random-Walk

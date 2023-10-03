@@ -9,7 +9,7 @@ namespace splinetlsm {
             double rate_prior, double shape_prior,
             double coefs_rate_prior, double coefs_shape_prior,
             double mgp_a1, double mgp_a2,
-            double tau_prec, double coefs_tau_prec) :
+            double tau_prec, double coefs_tau_prec, double alpha) :
         n_time_points(Y.n_elem),
         n_nodes(Y(0).n_rows),
         n_features(n_features),
@@ -25,6 +25,7 @@ namespace splinetlsm {
         mgp_a2(mgp_a2),
         tau_prec(tau_prec), 
         coefs_tau_prec(coefs_tau_prec),
+        alpha(alpha),
         density(n_time_points) {
 
             // latent positions' difference and penalty matrices

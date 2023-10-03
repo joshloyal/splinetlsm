@@ -32,7 +32,7 @@ TEST_CASE("Node Variances", "[variances]") {
     splinetlsm::Moments moments = splinetlsm::calculate_moments(
             params.model, B_sub); 
     arma::field<arma::vec> omega = splinetlsm::optimize_omega(
-            moments, X, sample_info);
+            moments, X, 0.95, sample_info);
     
     double grad_b = splinetlsm::calculate_node_variance_gradient(
             params.model.W, params.model.W_sigma, moments.log_gamma,
@@ -67,7 +67,7 @@ TEST_CASE("Coefficient Variances", "[variances]") {
     splinetlsm::Moments moments = splinetlsm::calculate_moments(
             params.model, B_sub); 
     arma::field<arma::vec> omega = splinetlsm::optimize_omega(
-            moments, X, sample_info);
+            moments, X, 0.95, sample_info);
     
     double grad_b = splinetlsm::calculate_coef_variance_gradient(
             params.model.W_coefs, params.model.W_coefs_sigma, 

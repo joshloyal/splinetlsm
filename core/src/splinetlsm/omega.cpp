@@ -6,7 +6,7 @@
 namespace splinetlsm {
 
     double optimize_omega_single(const Moments& moments, const arma::cube& X, 
-            uint i, uint j, uint t) {
+            double alpha, uint i, uint j, uint t) {
         
         // extract necessary parameters
         arma::vec x = get_covariates(X, i, j);
@@ -26,14 +26,14 @@ namespace splinetlsm {
         c_sq += arma::as_scalar(mu_i.t() * (Sigma_j % mu_i));
         c_sq += arma::as_scalar(mu_j.t() * (Sigma_i % mu_j));
         
-        // calculate mean of PG(1, c)
+        // calculate mean of PG(alpha, c)
         double c = sqrt(c_sq); 
-        return 0.5 * (1. / c) * tanh(0.5 * c);
+        return alpha * 0.5 * (1. / c) * tanh(0.5 * c);
     }
     
     arma::field<arma::vec> optimize_omega(
             const Moments& moments, const array4d& X, 
-            const SampleInfo& sample_info) {
+            double alpha, const SampleInfo& sample_info) {
         
         uint n_nodes = moments.U.n_rows;
         uint n_time_steps = sample_info.time_indices.n_elem;
@@ -49,7 +49,7 @@ namespace splinetlsm {
                 uint dyad_idx = 0;
                 for (auto j : dyads) {
                     omega(t, i)(dyad_idx) = optimize_omega_single(
-                            moments, Xt, i, j, t);
+                            moments, Xt, alpha, i, j, t);
                     dyad_idx += 1;
                 }
             }

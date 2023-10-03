@@ -118,6 +118,7 @@ class SplineDynamicLSM(object):
                  n_features=2,
                  n_segments='auto',
                  degree=3,
+                 clamped=False,
                  ls_penalty_order=1,
                  coefs_penalty_order=1,
                  ls_shape_prior=2.,
@@ -128,11 +129,13 @@ class SplineDynamicLSM(object):
                  mgp_a2=3.,
                  tau_prec=1,
                  coefs_tau_prec=1e-2,
+                 alpha=0.95,
                  init_type='usvt',
                  random_state=42):
         self.n_features = n_features
         self.n_segments = n_segments
         self.degree = degree
+        self.clamped = clamped
         self.ls_penalty_order = ls_penalty_order
         self.coefs_penalty_order = coefs_penalty_order
         self.ls_rate_prior = ls_rate_prior
@@ -143,6 +146,7 @@ class SplineDynamicLSM(object):
         self.mgp_a2 = mgp_a2
         self.tau_prec = tau_prec
         self.coefs_tau_prec = coefs_tau_prec
+        self.alpha = alpha
         self.init_type = init_type
         self.random_state = random_state
 
@@ -200,9 +204,9 @@ class SplineDynamicLSM(object):
         self.n_knots_ = self.n_segments_ + self.degree 
         
         self.X_fit_ = X
-        self.B_fit_, self.bs_ = bspline_basis(
+        self.B_fit_ = bspline_basis(
                 self.time_points_, n_segments=self.n_segments_, 
-                degree=self.degree)
+                degree=self.degree, clamped=self.clamped)
         
         if self.init_type == 'usvt':
             W_init, W_coefs_init = initialize_parameters(
@@ -217,6 +221,7 @@ class SplineDynamicLSM(object):
     
         params, moments, diagnostics = optimize_elbo_svi(
                 self.Y_fit_, self.B_fit_, self.time_points_, self.X_fit_,
+                alpha=self.alpha,
                 W_init=W_init, W_coefs_init=W_coefs_init,
                 n_features=self.n_features,
                 penalty_order=self.ls_penalty_order,
