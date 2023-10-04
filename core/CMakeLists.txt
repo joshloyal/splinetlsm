@@ -21,9 +21,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -O2")
 ## ======================================================================================##
 ## External libraries
 ## ======================================================================================##
-find_package(Armadillo REQUIRED)
-message("Armadillo Include: ${ARMADILLO_INCLUDE_DIRS}")
-include_directories(${ARMADILLO_INCLUDE_DIRS})
+#find_package(Armadillo REQUIRED)
+#message("Armadillo Include: ${ARMADILLO_INCLUDE_DIRS}")
+#include_directories(${ARMADILLO_INCLUDE_DIRS})
+include_directories(/gpfs/home/jdl22h/workspace/code/splinetlsm/third-party/)
 
 #find_package(Boost 1.66 REQUIRED COMPONENTS math)
 find_package(Boost REQUIRED)
@@ -43,8 +44,16 @@ message("GSL Libraries: ${GSL_LIBRARIES}")
 include_directories(${GSL_INCLUDE_DIRS})
 #link_directories(${GSL_LIBRARIES})
 
+find_package(BLAS REQUIRED)
+message("BLAS Include: ${BLAS_LIBRARIES}")
+link_directories(${BLAS_LIBRARIES})
+find_package(LAPACK REQUIRED)
+message("LAPACK Include: ${LAPACK_LIBRARIES}")
+link_directories(${LAPACK_LIBRARIES})
+
 # testing with Catch2
-find_package(Catch2 3 REQUIRED)
+add_subdirectory(/gpfs/home/jdl22h/lib/Catch2 build)
+#find_package(Catch2 3 REQUIRED)
 
 ## ======================================================================================##
 ## Subdirectories and source files
@@ -75,4 +84,5 @@ ADD_CUSTOM_TARGET(release
 ## ======================================================================================##
 add_executable(splinetlsm ${SOURCES})
 #target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} Boost::filesystem OpenMP::OpenMP_CXX Catch2::Catch2WithMain)
-target_link_libraries(splinetlsm PRIVATE ${ARMADILLO_LIBRARIES} GSL::gsl Catch2::Catch2WithMain)
+#target_link_libraries(splinetlsm PRIVATE ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${ARMADILLO_LIBRARIES} GSL::gsl Catch2::Catch2WithMain)
+target_link_libraries(splinetlsm PRIVATE /opt/rcc/gnu/lib64/libblas.so /opt/rcc/gnu/lib64/liblapack.so ${ARMADILLO_LIBRARIES} GSL::gsl Catch2::Catch2WithMain)

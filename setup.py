@@ -17,9 +17,12 @@ VERSION = __version__
 
 # armadillo header-files included with the package
 ARMADILLO_INC = os.path.join(HERE, 'third-party')
-BOOST_INC = "/opt/homebrew/include"
-GSL_LIB = "/opt/homebrew/lib"
-OPENBLAS_LIB = "/opt/homebrew/Cellar/openblas/0.3.23/lib"
+#BOOST_INC = "/opt/homebrew/include"
+#GSL_LIB = "/opt/homebrew/lib"
+#OPENBLAS_LIB = "/opt/homebrew/Cellar/openblas/0.3.23/lib"
+BOOST_INC = "/usr/include"
+GSL_LIB = "/usr/lib"
+#GSL_LIB = "/gpfs/research/software/gsl/2.6/gsl-2.6_build/lib"
 
 MOD_NAMES = [
     'splinetlsm.armadillo',
@@ -110,8 +113,9 @@ def cythonize_source(source, cython_cov=False):
 
 def make_extension(ext_name, macros=[]):
     ext_path = ext_name.replace('.', os.path.sep) + '.cpp'
-    include_dirs = [numpy.get_include(), ARMADILLO_INC, BOOST_INC, ".", "./src"]
-    library_dirs = ['/usr/lib', GSL_LIB]
+    include_dirs = [numpy.get_include(), ARMADILLO_INC, BOOST_INC, ".", "./src"] #"/usr/include/gsl/"
+    library_dirs = ["/opt/rcc/gnu/lib64", GSL_LIB]
+    #library_dirs = ["/usr/lib64", GSL_LIB] #'/usr/lib64'
     if get_include():
         include_dirs = [get_include()] + include_dirs
 
@@ -119,11 +123,14 @@ def make_extension(ext_name, macros=[]):
         ext_name,
         sources=[ext_path] + get_sources(),
         include_dirs=include_dirs,
-        extra_compile_args=["-O3", "-fPIC", "-std=c++17", "-fopenmp"],
-        extra_link_args=["-fopenmp"],
+        extra_compile_args=["-O3", "-fPIC", "-std=c++17"],#, '-lm', '-ldl'],
+        #extra_link_args=["-fopenmp"],
         define_macros=macros,
-        libraries=['blas', 'lapack', 'gsl'],
+        #libraries=['blas', 'lapack', 'gsl'],
         #libraries=['openblas', 'gsl'],
+        libraries=['blas', 'lapack', 'gsl', 'gslcblas'],
+        #libraries=['openblas', 'gsl', 'gslcblas'],
+        #libraries=['armadillo', 'openblas', 'gsl', 'gslcblas'],
         library_dirs=library_dirs,
         language='c++')
 
