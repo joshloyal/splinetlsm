@@ -11,7 +11,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.utils import check_random_state
 
 from .bspline import bspline_basis
-from .initialize import initialize_parameters
+from .initialize import initialize_parameters, smooth_positions_procrustes
 from ._svi import optimize_elbo_svi
 
 
@@ -116,7 +116,7 @@ class SplineDynamicLSM(object):
     """
     def __init__(self,
                  n_features=2,
-                 n_segments='auto',
+                 n_segments=20,
                  degree=3,
                  clamped=False,
                  ls_penalty_order=1,
@@ -197,11 +197,10 @@ class SplineDynamicLSM(object):
             self.n_time_points_ = min(n_time_points, n_time_steps)
         
         if self.n_segments == 'auto':
-            self.n_segments_ = (n_time_steps - 1 if n_time_steps < 25 else 
-                ceil(min(n_time_steps / 4, 40)))
+            self.n_segments_ = min(
+                    ceil((n_nodes * n_time_steps) ** 0.25) + 1, 36)
         else:
             self.n_segments_ = self.n_segments
-        self.n_knots_ = self.n_segments_ + self.degree 
         
         self.X_fit_ = X
         self.B_fit_ = bspline_basis(
@@ -214,10 +213,20 @@ class SplineDynamicLSM(object):
                 n_features=self.n_features, random_state=self.random_state)
         else: 
             rng = check_random_state(self.random_state)     
-            W_init = rng.randn(n_nodes, self.B_fit_.shape[0], self.n_features)
+            W0 = rng.randn(n_nodes, self.n_features, 1)
+            W_init = W0 + np.cumsum(
+                    0.01 * rng.randn(n_nodes, self.n_features, self.B_fit_.shape[0]),
+                    axis=-1)
+            W_init = W_init.transpose((0, 2, 1))
+            #W_init = rng.randn(n_nodes, self.B_fit_.shape[0], self.n_features)
 
             n_covariates = 1 if X is None else 1 + self.X_fit_.shape[-1]
-            W_coefs_init = rng.randn(self.B_fit_.shape[0], n_covariates)
+            W0 = rng.randn(n_covariates, 1)
+            W_coefs_init = W0 + np.cumsum(
+                    0.01 * rng.randn(n_covariates, self.B_fit_.shape[0]),
+                    axis=-1)
+            W_coefs_init = W_coefs_init.T
+            #W_coefs_init = rng.randn(self.B_fit_.shape[0], n_covariates)
     
         params, moments, diagnostics = optimize_elbo_svi(
                 self.Y_fit_, self.B_fit_, self.time_points_, self.X_fit_,
@@ -249,7 +258,11 @@ class SplineDynamicLSM(object):
         self.W_sigma_ = params['W_sigma']
         self.b_ = params['b']
         self.w_prec_ = moments['w_prec']
-        self.U_ = moments['U'].transpose((1, 0, 2))
+
+        # extract the latent positions and smooth them over-time through an
+        # procrustes re-alignment.
+        self.U_ = smooth_positions_procrustes(
+                moments['U'].transpose((1, 0, 2)))
 
         self.W_intercept_ = params['W_intercept']
         self.W_intercept_sigma_ = params['W_intercept_sigma']
