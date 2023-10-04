@@ -90,7 +90,7 @@ def initialize_parameters(Y, B, X=None, n_features=2, random_state=42):
     # smooth the latent positions
     U = smooth_positions_procrustes(U)
     
-    # project the estimates onto spline coefficients
+    # project the estimates onto spline coefficients (with a ridge penalty)
     Proj_B = np.linalg.inv((B @ B.T).toarray()) @ B
     W_coefs = Proj_B @ coefs 
     W = np.zeros((B.shape[0], n_nodes, n_features))
