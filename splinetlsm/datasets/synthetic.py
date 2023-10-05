@@ -30,6 +30,18 @@ def generate_gp(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.
     return U
 
 
+def generate_gp_coefs(time_points, n_covariates=2, length_scale=0.2, tau=0.1, random_state=None):
+    rng = check_random_state(random_state)
+    
+    # RBF GP
+    n_time_points = time_points.shape[0]
+    cov = RBF(length_scale=length_scale)(time_points.reshape(-1, 1)) 
+    U = tau * rng.multivariate_normal(
+            mean=np.zeros(n_time_points), cov=cov, size=(n_covariates,))
+    
+    return U.T
+
+
 def generate_bspline(time_points, 
         n_nodes=100, n_features=2, n_segments=11, degree=3, 
         tau=4, sigma=0.1, random_state=None):
@@ -138,7 +150,10 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
             x = rng.randn(n_dyads)
             for t in range(n_time_points):
                 X[t, ..., p] = vec_to_adjacency(x)
-        coefs = np.array([1., -1.])
+        coefs = np.array([1., -1.]) + generate_gp_coefs(
+                time_points, n_covariates=2, 
+                length_scale=length_scale, tau=tau,
+                random_state=rng) 
     else:
         X = None
         coefs = None
@@ -152,7 +167,7 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
     for t in range(n_time_points):
         eta = (U[t] @ U[t].T)[subdiag]
         if include_covariates:
-            eta += (X[t] @ coefs)[subdiag]
+            eta += (X[t] @ coefs[t])[subdiag]
         intercept[t] = find_intercept(eta, target_density=density)
 
         probas[t] = expit(eta + intercept[t])
