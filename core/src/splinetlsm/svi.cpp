@@ -29,11 +29,6 @@ namespace splinetlsm {
 
         // update step size
         iter_idx_ += 1;
-        //if (iter_idx_ < 50) {
-        //    step_size_ = 0.7;
-        //} else {
-        //    step_size_ = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
-        //}
         step_size_ = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
         
         //------- Sample Dyads ----------------------------------------------//
