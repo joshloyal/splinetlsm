@@ -26,6 +26,7 @@ namespace splinetlsm {
             const arma::vec& time_points, Params& params);
     public: 
         double step_size_;
+        bool changed_step_size_;
 
     private:
         ModelConfig config_;
