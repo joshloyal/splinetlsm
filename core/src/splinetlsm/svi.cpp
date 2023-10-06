@@ -15,7 +15,8 @@ namespace splinetlsm {
         dyad_sampler_(nonedge_proportion, n_time_steps),
         iter_idx_(0), 
         step_size_delay_(step_size_delay), 
-        step_size_power_(step_size_power) {}
+        step_size_power_(step_size_power),
+        changed_step_size_(false) {}
 
     std::pair<Params, double>
     SVI::update(const sp_cube& Y, const arma::sp_mat& B, const array4d& X,
@@ -29,8 +30,12 @@ namespace splinetlsm {
 
         // update step size
         iter_idx_ += 1;
-        step_size_ = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
-        
+        if (!changed_step_size_) {
+            step_size_ = 0.5;
+        } else {
+            step_size_ = pow(iter_idx_ + step_size_delay_, -step_size_power_); 
+        }
+
         //------- Sample Dyads ----------------------------------------------//
         
         // sub-sample time indices and dyads
@@ -224,7 +229,10 @@ namespace splinetlsm {
                 }
             } 
             
-            if (n_converged == 2) {
+            if (n_converged == 2 && !svi.changed_step_size_) {
+                svi.changed_step_size_ = true;
+                n_converged = 0;
+            } else if (n_converged == 2) {
                 converged = true;
                 break;
             }
