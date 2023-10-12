@@ -116,7 +116,7 @@ class SplineDynamicLSM(object):
     """
     def __init__(self,
                  n_features=2,
-                 n_segments=20,
+                 n_segments='auto',
                  degree=3,
                  clamped=False,
                  ls_penalty_order=1,
@@ -151,9 +151,9 @@ class SplineDynamicLSM(object):
         self.random_state = random_state
 
     def fit(self, Y, time_points, X=None, 
-            nonedge_proportion=1, n_time_points=0.5, n_samples=2000,
-            step_size_delay=0.5,  step_size_power=0.5,  # 1 / sqrt(T) step size for non-convex optimization 
-            max_iter=500, tol=1e-3):
+            nonedge_proportion=2, n_time_points=0.25, n_samples=2000,
+            step_size_delay=1,  step_size_power=0.75, 
+            max_iter=250, tol=1e-3):
         """
         Parameters
         ----------
