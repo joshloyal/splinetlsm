@@ -186,7 +186,7 @@ class GaussianProcessDynamicLSM(object):
             samples = self.samples_
 
         time_points = self.time_points_ if time_points is None else time_points
-        model_args = (None, time_points, n_timee_points, n_nodes, self.n_features,
+        model_args = (None, time_points, n_time_points, n_nodes, self.n_features,
                       jnp.repeat(True, n_time_points))
         
         vmap_args = (self.samples_, random.split(rng_key, n_samples))
