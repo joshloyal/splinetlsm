@@ -192,13 +192,16 @@ class SplineDynamicLSM(object):
         n_nodes = Y[0].shape[0]
         
         if np.asarray(n_time_points).dtype.kind == 'f':
-            self.n_time_points_ = min(ceil(n_time_steps * n_time_points), 100)
+            self.n_time_points_ = max(5,
+                    min(ceil(n_time_steps * n_time_points), 100))
         else:
             self.n_time_points_ = min(n_time_points, n_time_steps)
         
         if self.n_segments == 'auto':
-            self.n_segments_ = min(
-                    ceil((n_nodes * n_time_steps) ** 0.25) + 1, 36)
+            #self.n_segments_ = min(
+            #        ceil((n_nodes * n_time_steps) ** 0.25) + 1, 36)
+            self.n_segments_ = max(5, min(
+                    ceil((n_nodes * n_time_steps) ** 0.2) + 1, 36))
         else:
             self.n_segments_ = self.n_segments
         
