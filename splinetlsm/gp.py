@@ -37,11 +37,11 @@ def calculate_auc(Y, probas):
 # squared exponential kernel 
 def kernel(X, Z, length_scale=0.1):
     dist_sq = jnp.power((X[:, None] - Z) / length_scale, 2.0)
-    return jnp.exp(-dist_sq)
+    return jnp.exp(-0.5 * dist_sq)
 
 
-def gplsm(Y, time_points, n_time_points, n_nodes, n_features=10, train_indices=None, 
-          is_predictive=False):
+def gplsm(Y, time_points, n_time_points, n_nodes, n_features=10, length_scale=0.1, 
+          train_indices=None, is_predictive=False):
     # multiplicative-gamma process
     a1, a2 = 2, 3
     v1 = numpyro.sample("v1", dist.Gamma(a1, 1))
@@ -51,7 +51,7 @@ def gplsm(Y, time_points, n_time_points, n_nodes, n_features=10, train_indices=N
             jnp.cumprod(jnp.concatenate((jnp.array([v1]), vh))))
     
     # squared exponential kernel
-    cov_t = kernel(time_points, time_points, length_scale=0.1)
+    cov_t = kernel(time_points, time_points, length_scale=length_scale)
 
     # intercept
     intercept = numpyro.sample("intercept", dist.MultivariateNormal(
@@ -105,8 +105,10 @@ def posterior_predictive(model, rng_key, samples, stat_fun, *model_args,
 class GaussianProcessDynamicLSM(object):
     def __init__(self,
                  n_features=10,
+                 length_scale=0.1,
                  random_state=42):
         self.n_features = n_features
+        self.length_scale = length_scale
         self.random_state = random_state
 
     def sample(self, Y, time_points, n_warmup=1000, n_samples=1000, adapt_delta=0.8):
@@ -126,7 +128,7 @@ class GaussianProcessDynamicLSM(object):
             (self.time_max_ - self.time_min_))
         
         model_args = (self.Y_fit_, self.time_points_, n_time_points, n_nodes, 
-                self.n_features, train_indices)
+                self.n_features, self.length_scale, train_indices)
         model_kwargs = {'is_predictive' : False}
         
         kernel = NUTS(gplsm, target_accept_prob=adapt_delta)
@@ -147,7 +149,7 @@ class GaussianProcessDynamicLSM(object):
     def model_args_(self):
         n_time_points, n_nodes, _ = self.samples_['U'].shape
         model_args = (None, self.time_points_, n_time_points, n_nodes, self.n_features,
-                      jnp.repeat(True, n_time_points))
+                      self.length_scale, jnp.repeat(True, n_time_points))
         return model_args
 
     @property
@@ -166,7 +168,7 @@ class GaussianProcessDynamicLSM(object):
 
         time_points = self.time_points_ if time_points is None else time_points
         model_args = (None, time_points, n_time_points, n_nodes, self.n_features,
-                      jnp.repeat(True, n_time_points))
+                      self.length_scale, jnp.repeat(True, n_time_points))
         
         vmap_args = (samples, random.split(rng_key, n_samples))
         return vmap(
@@ -187,7 +189,7 @@ class GaussianProcessDynamicLSM(object):
 
         time_points = self.time_points_ if time_points is None else time_points
         model_args = (None, time_points, n_time_points, n_nodes, self.n_features,
-                      jnp.repeat(True, n_time_points))
+                      self.length_scale, jnp.repeat(True, n_time_points))
         
         vmap_args = (self.samples_, random.split(rng_key, n_samples))
         return vmap(
@@ -208,7 +210,7 @@ class GaussianProcessDynamicLSM(object):
 
         time_points = self.time_points_ if time_points is None else time_points
         model_args = (None, time_points, n_time_points, n_nodes, self.n_features,
-                      jnp.repeat(True, n_time_points))
+                      self.length_scale, jnp.repeat(True, n_time_points))
         
         vmap_args = (self.samples_, random.split(rng_key, n_samples))
         return np.asarray(vmap(
