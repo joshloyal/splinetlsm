@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/joshloyal/multidynet/blob/master/LICENSE)
 
-## Fast Variational Inference of LSMs for Dynamic Networks using Bayesian P-Splines
+## Fast Variational Inference of Dynamic LSMs using Bayesian P-Splines
 
 *Author: [Joshua D. Loyal](https://joshloyal.github.io/)*
 
