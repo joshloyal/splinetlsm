@@ -291,7 +291,7 @@ class SplineDynamicLSM(object):
         self.p_ = params['p']
 
         self.a_coefs_ = params['a_coefs']
-        self.b_coefs_ = params['b_coefs']
+        self.p_coefs_ = params['p_coefs']
         
         # sample spline coefficients from the variational posterior
         self.samples_ = self.sample(n_samples=n_samples)
@@ -339,7 +339,11 @@ class SplineDynamicLSM(object):
                 X, jnp.array(self.B_fit_.todense()))
             )(self.samples_).mean(axis=0)
     
-    def posterior_predictive(self, stat_fun, random_state=42):
+    def posterior_predictive(self, stat_fun, chunk_size=None, random_state=42):
+        if chunk_size is not None:
+            return self._chunked_posterior_predictive(
+                    stat_fun, chunk_size=chunk_size, random_state=random_state)
+
         rng_key = random.PRNGKey(random_state)
         
         X = None if self.X_fit_ is None else jnp.array(self.X_fit_)
@@ -350,3 +354,28 @@ class SplineDynamicLSM(object):
                 rng_key, samples, stat_fun,
                 X, jnp.array(self.B_fit_.todense()))
             )(*vmap_args))
+
+    def _chunked_posterior_predictive(self, stat_fun, chunk_size=100, random_state=42):
+        rng_key = random.PRNGKey(random_state)
+        
+        X = None if self.X_fit_ is None else jnp.array(self.X_fit_)
+        n_samples  = self.samples_['W'].shape[0]
+        
+        out = []
+        n_chunks = ceil(n_samples / chunk_size)
+        for idx in range(n_chunks):
+            start = idx * chunk_size
+            end = start + chunk_size
+            chunked_samples = {
+                    k: v[start:end] for (k, v) in self.samples_.items()
+            }
+
+            vmap_args = (chunked_samples, random.split(rng_key, chunk_size))
+            out.append(np.asarray(vmap(
+                lambda samples, rng_key : posterior_predictive(
+                    rng_key, samples, stat_fun,
+                    X, jnp.array(self.B_fit_.todense()))
+                )(*vmap_args)))
+
+        return np.vstack(out)
+
