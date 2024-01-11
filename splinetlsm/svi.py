@@ -153,6 +153,15 @@ class SplineDynamicLSM(object):
     random_state : int, RandomState instance or None (default=None)
         Controls the random seed given to the method. Pass an int for 
         reproducible output across multiple function calls.
+
+    
+    Examples
+    --------
+
+    >>> from splinetlsm import SplineDynamicLSM  
+    >>> from dynetlsm.datasets import load_polecat
+    >>> Y, time_points, X, _, _, _, _ = load_polecat()
+    >>> model = SplineDynamicLSM(n_features=6).fit(Y, time_points, X)
     """
     def __init__(self,
                  n_features=2,
