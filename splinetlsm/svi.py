@@ -92,7 +92,7 @@ def calculate_auc(Y, probas):
 
 
 class SplineDynamicLSM(object):
-    """SplineDynamicLSM
+    """Spline Approximation to the Continuous-Time Dynamic Latent Space Model
 
     Parameters
     ----------
