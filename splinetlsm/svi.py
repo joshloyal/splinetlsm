@@ -80,20 +80,6 @@ def posterior_predictive(rng_key, samples, stat_fun, X, B):
     return stat_fun(y)
 
 
-#def calculate_auc(Y, X, moments):
-#    n_time_steps = len(Y)
-#    n_nodes = Y[0].shape[0]
-#    y_true, y_pred = [], []
-#    subdiag = np.tril_indices(n_nodes, k=-1)
-#    for t in range(n_time_steps):
-#        U = moments['U'][:, t, :]
-#        coefs = moments['coefs'][:, t]
-#
-#        y_true.append(Y[t].toarray()[subdiag])
-#        y_pred.append(expit((X[t] @ coefs + U @ U.T)[subdiag]))
-#    
-#    return roc_auc_score(np.concatenate(y_true), np.concatenate(y_pred))
-
 def calculate_auc(Y, probas):
     n_time_steps = len(Y)
     n_nodes = Y[0].shape[0]
@@ -110,16 +96,69 @@ class SplineDynamicLSM(object):
 
     Parameters
     ----------
-    n_segments: int
-    The number of equally sized segements between [0, 1]. The number of knots
-    is n_segments + degree.
+    n_features : int (default=2)
+        The number of latent features. This is the dimension of the 
+        latent space.
+
+    n_segments : int (default='auto')
+        The number of internal knots is the number of segments used to segment
+        the unit interval minus one. By default the number of internal knots is
+        min(ceil((n_nodes * n_time_steps) ** 0.2) + 1, 36).
+
+    degree : int (default=3)
+        The degree of the B-spline basis. The default is cubic B-splines.
+    
+    clamped : bool (default=False)
+        Whether to use clamped B-splines. The default is non-clamped, that is,
+        there are no repeated knots at the boundary.
+
+    coefs_penalty_order : int (default=1)
+        The order of the random-walk  prior for the coefficient function. All
+        coordinate functions share the same order.
+
+    ls_shape_prior : float (default=2)
+        The shape parameter of the Gamma(shape/2, rate/2) prior on the nodewise
+        variance parameters.
+    
+    ls_rate_prior : float (default=1)
+        The rate parameter of the Gamma(shape/2, rate/2) prior on the nodewise
+        variance parameters.
+    
+    coefs_shape_prior : float (default=2)
+        The shape parameter of the Gamma(shape/2, rate/2) prior on the 
+        variance parameters of the coefficient function.
+    
+    coefs_rate_prior : float (default=1)
+        The rate parameter of the Gamma(shape/2, rate/2) prior on the 
+        variance parameters of the coefficient function.
+    
+    mgp_a1 : float (default=2.)
+        The shape parameter for the initial Gamma(a1, 1) prior for the
+        multiplicative gamma process.
+    
+    mgp_a2 : float (default=3.)
+        The shape parameter for the remaining Gamma(a2, 1) priors for the
+        multiplicative gamma process.
+    
+    alpha : float (default=0.95)
+        Fractional power of the alpha-variational posterior.
+    
+    init_type : str (default='usvt')
+        Initialization method. The default is the USVT + ASE method, otherwise
+        a random initialization is used.
+
+    max_time_points : int (default=100)
+        Maximum number of time points to subsample.
+
+    random_state : int, RandomState instance or None (default=None)
+        Controls the random seed given to the method. Pass an int for 
+        reproducible output across multiple function calls.
     """
     def __init__(self,
                  n_features=2,
                  n_segments='auto',
                  degree=3,
                  clamped=False,
-                 ls_penalty_order=1,
                  coefs_penalty_order=1,
                  ls_shape_prior=2.,
                  ls_rate_prior=1.,
@@ -127,8 +166,6 @@ class SplineDynamicLSM(object):
                  coefs_rate_prior=1.,
                  mgp_a1=2.,
                  mgp_a2=3.,
-                 tau_prec=1,
-                 coefs_tau_prec=1e-2,
                  alpha=0.95,
                  init_type='usvt',
                  max_time_points=100,
@@ -137,7 +174,6 @@ class SplineDynamicLSM(object):
         self.n_segments = n_segments
         self.degree = degree
         self.clamped = clamped
-        self.ls_penalty_order = ls_penalty_order
         self.coefs_penalty_order = coefs_penalty_order
         self.ls_rate_prior = ls_rate_prior
         self.ls_shape_prior = ls_shape_prior
@@ -145,8 +181,6 @@ class SplineDynamicLSM(object):
         self.coefs_shape_prior = coefs_shape_prior
         self.mgp_a1 = mgp_a1
         self.mgp_a2 = mgp_a2
-        self.tau_prec = tau_prec
-        self.coefs_tau_prec = coefs_tau_prec
         self.alpha = alpha
         self.init_type = init_type
         self.max_time_points = max_time_points
@@ -156,26 +190,44 @@ class SplineDynamicLSM(object):
             nonedge_proportion=2, n_time_points=0.25, n_samples=2000,
             step_size_delay=1,  step_size_power=0.75, 
             max_iter=250, tol=1e-3):
-        """
+        """Infer the approximate alpha-variational posterior using SVI
+        based on dynamic network Y and covariates X.
+
         Parameters
         ----------
-        Y : list of length T of (n,n) sparse csc matrices
+        Y : list of length n_time_points of (n_nodes, n_nodes) sparse csc matrices
+           A list of adjacency matrices stored as sparse csc matrices. 
+
+        time_points : (n_time_points,) ndarray of observed time points
+           The observed time points. 
         
-        time_points : (T,) ndarray of observed time points
+        X : (n_time_points, n_nodes, n_nodes, n_covariates) ndarray of covariates
+            A tensor of dyadic covariates. Note that an intercept is included 
+            automatically, so a feature of ones does not need to be included.
+            Set to `None` if no dyadic covariates are present, this will 
+            still include an intercept.
         
-        X : (T,n,n,p) covariate matrix.
+        nonedge_proportion : int (default=2)
+            The non-edge fraction used to construct the subsample used to
+            estimate the stochastic gradients.
+        
+        n_time_points : float (default=0.25)
+            The temporal snapshot fraction.
 
-        step_size_delay : float
-            (step_size_delay + i)^(-step_size_power)
+            - If an int, then uses n_time_point time points.
+            - If a float, then uses that fraction of total time points.
 
-        step_size_power : float
-            (step_size_delay + i)^(-step_size_power)
+        step_size_delay : float (default=1)
+            learning_rate = (step_size_delay + i)^(-step_size_power).
 
-        max_iter : int
-            Maximum number of iterations to run SVI
+        step_size_power : float (default=0.75)
+            learning_rate = (step_size_delay + i)^(-step_size_power).
 
-        tol : float
-            Tolerance to determine convergence of the SVI algorithm
+        max_iter : int (default=25)
+            Maximum number of iterations to run the SVI algorithm.
+
+        tol : float (default=1e-3)
+            Tolerance to determine convergence of the SVI algorithm.
         """
         if isinstance(Y, np.ndarray):
             self.Y_fit_ = []
@@ -200,8 +252,6 @@ class SplineDynamicLSM(object):
             self.n_time_points_ = min(n_time_points, n_time_steps)
         
         if self.n_segments == 'auto':
-            #self.n_segments_ = min(
-            #        ceil((n_nodes * n_time_steps) ** 0.25) + 1, 36)
             self.n_segments_ = max(5, min(
                     ceil((n_nodes * n_time_steps) ** 0.2) + 1, 36))
         else:
@@ -238,13 +288,13 @@ class SplineDynamicLSM(object):
                 alpha=self.alpha,
                 W_init=W_init, W_coefs_init=W_coefs_init,
                 n_features=self.n_features,
-                penalty_order=self.ls_penalty_order,
+                penalty_order=1,
                 coefs_penalty_order=self.coefs_penalty_order,
                 rate_prior=self.ls_rate_prior, shape_prior=self.ls_shape_prior,
                 coefs_rate_prior=self.coefs_rate_prior, 
                 coefs_shape_prior=self.coefs_shape_prior,
                 mgp_a1=self.mgp_a1, mgp_a2=self.mgp_a2, 
-                tau_prec=self.tau_prec, coefs_tau_prec=self.coefs_tau_prec,
+                tau_prec=1., coefs_tau_prec=1e-2,
                 nonedge_proportion=nonedge_proportion, 
                 n_time_steps=self.n_time_points_, 
                 step_size_delay=step_size_delay,
