@@ -1,6 +1,6 @@
 # Simulation and Real Data Analysis Scripts
 
-Simulation and real data analysis scripts. The code was original written to be run on a HPC cluster. 
+Simulation and real data analysis scripts. The code was original written to run on a HPC cluster. 
 
 ## How to Run
 
