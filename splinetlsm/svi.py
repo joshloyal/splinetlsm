@@ -131,6 +131,7 @@ class SplineDynamicLSM(object):
                  coefs_tau_prec=1e-2,
                  alpha=0.95,
                  init_type='usvt',
+                 max_time_points=100,
                  random_state=42):
         self.n_features = n_features
         self.n_segments = n_segments
@@ -148,6 +149,7 @@ class SplineDynamicLSM(object):
         self.coefs_tau_prec = coefs_tau_prec
         self.alpha = alpha
         self.init_type = init_type
+        self.max_time_points = max_time_points
         self.random_state = random_state
 
     def fit(self, Y, time_points, X=None, 
@@ -193,7 +195,7 @@ class SplineDynamicLSM(object):
         
         if np.asarray(n_time_points).dtype.kind == 'f':
             self.n_time_points_ = max(5,
-                    min(ceil(n_time_steps * n_time_points), 100))
+                min(ceil(n_time_steps * n_time_points), self.max_time_points))
         else:
             self.n_time_points_ = min(n_time_points, n_time_steps)
         
