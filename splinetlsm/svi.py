@@ -282,7 +282,6 @@ class SplineDynamicLSM(object):
                     0.01 * rng.randn(n_nodes, self.n_features, self.B_fit_.shape[0]),
                     axis=-1)
             W_init = W_init.transpose((0, 2, 1))
-            #W_init = rng.randn(n_nodes, self.B_fit_.shape[0], self.n_features)
 
             n_covariates = 1 if X is None else 1 + self.X_fit_.shape[-1]
             W0 = rng.randn(n_covariates, 1)
@@ -290,7 +289,6 @@ class SplineDynamicLSM(object):
                     0.01 * rng.randn(n_covariates, self.B_fit_.shape[0]),
                     axis=-1)
             W_coefs_init = W_coefs_init.T
-            #W_coefs_init = rng.randn(self.B_fit_.shape[0], n_covariates)
     
         params, moments, diagnostics = optimize_elbo_svi(
                 self.Y_fit_, self.B_fit_, self.time_points_, self.X_fit_,
