@@ -4,7 +4,7 @@ Simulation and real data analysis scripts. The code was original written to run 
 
 ## How to Run
 
-The following commands run the simulations or real data analyses and produce the figures in the corresponding section.
+The following commands run the simulations or real data analysis and produce the figures in the corresponding section.
 
 ### Section 6.2 (Parameter Recovery for Varying Network Sizes)
 
