@@ -11,7 +11,7 @@ from ..mcmc import dynamic_adjacency_to_vec
 __all__ = ['load_polecat']
 
 
-def load_polecat():
+def load_polecat(n_nodes=None, n_time_points=None):
     module_path = dirname(__file__)
     file_path = join(module_path, 'raw_data')
 
@@ -21,9 +21,6 @@ def load_polecat():
     Y = Y_raw[1:]  # set up for lagged covariates
 
     # node names
-    #node_names = pd.read_csv(
-    #        join(file_path, 'polecat', 'node_names.npy'), 
-    #        header=None).values.ravel()
     node_names = pd.read_csv(
             join(file_path, 'polecat', 'dist_node_names.npy'), 
             header=None).values.ravel()
@@ -36,10 +33,10 @@ def load_polecat():
     regions = np.array([region_map[i] for i in node_names])
 
     # load static covariates (contig, comlang_off, distw)
-    n_time_points = Y.shape[0]
+    n_time_steps = Y.shape[0]
     file_name = join(file_path, 'polecat', 'dist_covariates.gz')
     X_static = np.ascontiguousarray(joblib.load(open(file_name, 'rb')))[None, ...]
-    X_static = np.repeat(X_static, n_time_points, axis=0)
+    X_static = np.repeat(X_static, n_time_steps, axis=0)
     X_static[..., 2] = np.log1p(X_static[..., 2])
     # remove contig (to much colinearity with distance)
     X_static = X_static[..., [1, 2]]
@@ -71,6 +68,22 @@ def load_polecat():
         year = years[t // 52] 
         date = dt.fromisocalendar(year, week, 1)
         time_labels.append(date.strftime("%Y-%m-%W"))
-
-
-    return Y, time_points, X, node_names, iso_codes, regions, time_labels[1:]
+    
+    # limit to n_nodes with highest overall degree
+    if n_nodes is not None:
+        degree = Y.sum(axis=(0, 1))
+        order = np.argsort(degree)[::-1][:n_nodes]
+        Y = Y[:, order][..., order]
+        X = X[:, order][:, :, order, :]
+        node_names = node_names[order]
+        iso_codes = iso_codes[order]
+        regions = regions[order]
+    
+    time_labels = time_labels[1:]
+    if n_time_points is not None:
+        Y = Y[-n_time_points:]
+        X = X[-n_time_points:]
+        time_points = time_points[-n_time_points:]
+        time_labels = time_labels[-n_time_points:]
+    
+    return Y, time_points, X, node_names, iso_codes, regions, time_labels
