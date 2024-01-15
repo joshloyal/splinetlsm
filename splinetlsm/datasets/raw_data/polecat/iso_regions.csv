@@ -1,0 +1,200 @@
+Country,ISO3,Region
+Afghanistan,AFG,Asia-Pacific
+Albania,ALB,Europe
+Algeria,DZA,Africa
+Andorra,AND,Europe
+Angola,AGO,Africa
+Antigua and Barbuda,ATG,Latin America and the Caribbean
+Argentina,ARG,Latin America and the Caribbean
+Armenia,ARM,Asia-Pacific
+Australia,AUS,Asia-Pacific
+Austria,AUT,Europe
+Azerbaijan,AZE,Asia-Pacific
+Bahamas,BHS,Latin America and the Caribbean
+Bahrain,BHR,Middle East
+Bangladesh,BGD,Asia-Pacific
+Barbados,BRB,Latin America and the Caribbean
+Belarus,BLR,Europe
+Belgium,BEL,Europe
+Belize,BLZ,Latin America and the Caribbean
+Benin,BEN,Africa
+Bhutan,BTN,Asia-Pacific
+Bolivia,BOL,Latin America and the Caribbean
+Bosnia and Herzegovina,BIH,Europe
+Botswana,BWA,Africa
+Brazil,BRA,Latin America and the Caribbean
+Brunei,BRN,Asia-Pacific
+Bulgaria,BGR,Europe
+Burkina Faso,BFA,Africa
+Burundi,BDI,Africa
+Cabo Verde,CPV,Africa
+Cambodia,KHM,Asia-Pacific
+Cameroon,CMR,Africa
+Canada,CAN,North America
+Central African Republic,CAF,Africa
+Chad,TCD,Africa
+Chile,CHL,Latin America and the Caribbean
+China,CHN,Asia-Pacific
+Colombia,COL,Latin America and the Caribbean
+Comoros,COM,Africa
+Congo,COG,Africa
+Costa Rica,CRI,Latin America and the Caribbean
+Cote d'Ivoire,CIV,Africa
+Croatia,HRV,Europe
+Cuba,CUB,Latin America and the Caribbean
+Cyprus,CYP,Europe
+Czechia,CZE,Europe
+Democratic Republic of the Congo,COD,Africa
+Denmark,DNK,Europe
+Djibouti,DJI,Africa
+Dominican Republic,DOM,Latin America and the Caribbean
+Ecuador,ECU,Latin America and the Caribbean
+Egypt,EGY,Middle East
+El Salvador,SLV,Latin America and the Caribbean
+Equatorial Guinea,GNQ,Africa
+Eritrea,ERI,Africa
+Estonia,EST,Europe
+Eswatini,SWZ,Africa
+Ethiopia,ETH,Africa
+European Union,EUU,Europe
+Fiji,FJI,Asia-Pacific
+Finland,FIN,Europe
+France,FRA,Europe
+Gabon,GAB,Africa
+Gambia,GMB,Africa
+Georgia,GEO,Asia-Pacific
+Germany,DEU,Europe
+Ghana,GHA,Africa
+Greece,GRC,Europe
+Grenada,GRD,Latin America and the Caribbean
+Guatemala,GTM,Latin America and the Caribbean
+Guinea,GIN,Africa
+Guinea-Bissau,GNB,Africa
+Guyana,GUY,Latin America and the Caribbean
+Haiti,HTI,Latin America and the Caribbean
+Honduras,HND,Latin America and the Caribbean
+Hong Kong SAR China,HKG,Asia-Pacific
+Hungary,HUN,Europe
+Iceland,ISL,Europe
+India,IND,Asia-Pacific
+Indonesia,IDN,Asia-Pacific
+Intergovernmental Organization,IGO,N/A
+Iran,IRN,Middle East
+Iraq,IRQ,Middle East
+Ireland,IRL,Europe
+Israel,ISR,Middle East
+Italy,ITA,Europe
+Jamaica,JAM,Latin America and the Caribbean
+Japan,JPN,Asia-Pacific
+Jordan,JOR,Middle East
+Kazakhstan,KAZ,Asia-Pacific
+Kenya,KEN,Africa
+Kiribati,KIR,Asia-Pacific
+Kosovo,XKX,Europe
+Kuwait,KWT,Middle East
+Kyrgyzstan,KGZ,Asia-Pacific
+Laos,LAO,Asia-Pacific
+Latvia,LVA,Europe
+Lebanon,LBN,Middle East
+Lesotho,LSO,Africa
+Liberia,LBR,Africa
+Libya,LBY,Middle East
+Liechtenstein,LIE,Europe
+Lithuania,LTU,Europe
+Luxembourg,LUX,Europe
+Madagascar,MDG,Africa
+Malawi,MWI,Africa
+Malaysia,MYS,Asia-Pacific
+Maldives,MDV,Asia-Pacific
+Mali,MLI,Africa
+Malta,MLT,Europe
+Marshall Islands,MHL,Asia-Pacific
+Mauritania,MRT,Africa
+Mauritius,MUS,Africa
+Mexico,MEX,Latin America and the Caribbean
+Micronesia,FSM,Asia-Pacific
+Moldova,MDA,Europe
+Monaco,MCO,Europe
+Mongolia,MNG,Asia-Pacific
+Montenegro,MNE,Europe
+Morocco,MAR,Middle East
+Mozambique,MOZ,Africa
+Myanmar [Burma],MMR,Asia-Pacific
+Namibia,NAM,Africa
+Nauru,NRU,Asia-Pacific
+Nepal,NPL,Asia-Pacific
+Netherlands,NLD,Europe
+New Zealand,NZL,Asia-Pacific
+Nicaragua,NIC,Latin America and the Caribbean
+Niger,NER,Africa
+Nigeria,NGA,Africa
+North Korea,PRK,Asia-Pacific
+North Macedonia,MKD,Europe
+Norway,NOR,Europe
+Oman,OMN,Middle East
+Pakistan,PAK,Asia-Pacific
+Palau,PLW,Asia-Pacific
+Palestinian Territories,PSE,Middle East
+Panama,PAN,Latin America and the Caribbean
+Papua New Guinea,PNG,Asia-Pacific
+Paraguay,PRY,Latin America and the Caribbean
+Peru,PER,Latin America and the Caribbean
+Philippines,PHL,Asia-Pacific
+Poland,POL,Europe
+Portugal,PRT,Europe
+Qatar,QAT,Middle East
+Romania,ROU,Europe
+Russia,RUS,Europe
+Rwanda,RWA,Africa
+Saint Kitts and Nevis,KNA,Latin America and the Caribbean
+Saint Lucia,LCA,Latin America and the Caribbean
+Saint Vincent and the Grenadines,VCT,Latin America and the Caribbean
+Samoa,WSM,Asia-Pacific
+San Marino,SMR,Europe
+Sao Tome and Principe,STP,Africa
+Saudi Arabia,SAU,Middle East
+Senegal,SEN,Africa
+Serbia,SRB,Europe
+Seychelles,SYC,Africa
+Sierra Leone,SLE,Africa
+Singapore,SGP,Asia-Pacific
+Slovakia,SVK,Europe
+Slovenia,SVN,Europe
+Solomon Islands,SLB,Asia-Pacific
+Somalia,SOM,Africa
+South Africa,ZAF,Africa
+South Korea,KOR,Asia-Pacific
+Spain,ESP,Europe
+Sri Lanka,LKA,Asia-Pacific
+Sudan,SDN,Africa
+Suriname,SUR,Latin America and the Caribbean
+Sweden,SWE,Europe
+Switzerland,CHE,Europe
+Syria,SYR,Middle East
+Taiwan,TWN,Asia-Pacific
+Tajikistan,TJK,Asia-Pacific
+Tanzania,TZA,Africa
+Thailand,THA,Asia-Pacific
+Timor-Leste,TLS,Asia-Pacific
+Togo,TGO,Africa
+Tonga,TON,Asia-Pacific
+Trinidad and Tobago,TTO,Latin America and the Caribbean
+Tunisia,TUN,Middle East
+Turkey,TUR,Middle East
+Turkmenistan,TKM,Asia-Pacific
+Tuvalu,TUV,Asia-Pacific
+Uganda,UGA,Africa
+Ukraine,UKR,Europe
+United Arab Emirates,ARE,Middle East
+United Kingdom,GBR,Europe
+United Nations,UNO,N/A
+United States,USA,North America
+Uruguay,URY,Latin America and the Caribbean
+Uzbekistan,UZB,Asia-Pacific
+Vanuatu,VUT,Asia-Pacific
+Vatican City,VAT,Europe
+Venezuela,VEN,Latin America and the Caribbean
+Vietnam,VNM,Asia-Pacific
+Yemen,YEM,Middle East
+Zambia,ZMB,Africa
+Zimbabwe,ZWE,Africa
