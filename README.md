@@ -2,11 +2,9 @@
 
 ## Fast Variational Inference of Dynamic LSMs using Bayesian P-Splines
 
-*Author: [Joshua D. Loyal](https://joshloyal.github.io/)*
-
 This package provides an interface for the model described in
 "Fast Variational Inference of Latent Space Models for Dynamic Networks using Bayesian P-Splines." Inference is performed using
-stochastic variational inference. For more details, see [Loyal (2023)]().
+stochastic variational inference.
 
 Dependencies
 ------------
