@@ -17,9 +17,7 @@ VERSION = __version__
 
 # armadillo header-files included with the package
 ARMADILLO_INC = os.path.join(HERE, 'third-party')
-BOOST_INC = "/opt/homebrew/include"
 GSL_LIB = "/opt/homebrew/lib"
-OPENBLAS_LIB = "/opt/homebrew/Cellar/openblas/0.3.23/lib"
 
 MOD_NAMES = [
     'splinetlsm.armadillo',
@@ -123,7 +121,6 @@ def make_extension(ext_name, macros=[]):
         extra_link_args=["-fopenmp"],
         define_macros=macros,
         libraries=['blas', 'lapack', 'gsl'],
-        #libraries=['openblas', 'gsl'],
         library_dirs=library_dirs,
         language='c++')
 
