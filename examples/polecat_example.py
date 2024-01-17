@@ -49,7 +49,7 @@ ax.tick_params(axis='both', which='major', labelsize=20)
 ax.grid(axis='x', lw=2)
 ax.set_xlabel('Year', fontsize=24, fontfamily='Arial')
 ax.set_ylabel('Coefficients', fontsize=24, fontfamily='arial')
-ax.legend(loc='upper center', ncols=4, fontsize=20, bbox_to_anchor=(0.5, 1.3))
+ax.legend(loc='upper center', ncol=4, fontsize=20, bbox_to_anchor=(0.5, 1.3))
 
 fig.savefig("coefs_n50.png", dpi=600, bbox_inches='tight')
 plt.show()
