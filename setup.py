@@ -113,9 +113,14 @@ def cythonize_source(source, cython_cov=False):
 
 def make_extension(ext_name, macros=[]):
     ext_path = ext_name.replace('.', os.path.sep) + '.cpp'
+<<<<<<< HEAD
     include_dirs = [numpy.get_include(), ARMADILLO_INC, BOOST_INC, ".", "./src"] #"/usr/include/gsl/"
     library_dirs = ["/opt/rcc/gnu/lib64", GSL_LIB]
     #library_dirs = ["/usr/lib64", GSL_LIB] #'/usr/lib64'
+=======
+    include_dirs = [numpy.get_include(), ARMADILLO_INC,  GSL_INC, ".", "./src"]
+    library_dirs = ['/usr/lib', GSL_LIB]
+>>>>>>> 3781ad0 (include data files in setup.py)
     if get_include():
         include_dirs = [get_include()] + include_dirs
 
@@ -171,7 +176,8 @@ def setup_package():
             version=VERSION,
             packages=find_packages(),
             ext_modules=ext_modules,
-            package_data={"": ["*.pyx", "*.pxd"]},
+            package_data={"": ["*.pyx", "*.pxd"], "datasets.raw_data.polecat": ["*.gz", "*.csv", "*.npy"]},
+            include_package_data=True,
         )
 
 if __name__ == '__main__':
