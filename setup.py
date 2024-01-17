@@ -17,6 +17,7 @@ VERSION = __version__
 
 # armadillo header-files included with the package
 ARMADILLO_INC = os.path.join(HERE, 'third-party')
+GSL_INC = "/opt/homebrew/include"
 GSL_LIB = "/opt/homebrew/lib"
 
 MOD_NAMES = [
@@ -108,7 +109,7 @@ def cythonize_source(source, cython_cov=False):
 
 def make_extension(ext_name, macros=[]):
     ext_path = ext_name.replace('.', os.path.sep) + '.cpp'
-    include_dirs = [numpy.get_include(), ARMADILLO_INC, BOOST_INC, ".", "./src"]
+    include_dirs = [numpy.get_include(), ARMADILLO_INC,  GSL_INC, ".", "./src"]
     library_dirs = ['/usr/lib', GSL_LIB]
     if get_include():
         include_dirs = [get_include()] + include_dirs
@@ -157,7 +158,8 @@ def setup_package():
             version=VERSION,
             packages=find_packages(),
             ext_modules=ext_modules,
-            package_data={"": ["*.pyx", "*.pxd"]},
+            package_data={"": ["*.pyx", "*.pxd"], "datasets.raw_data.polecat": ["*.gz", "*.csv", "*.npy"]},
+            include_package_data=True,
         )
 
 if __name__ == '__main__':
