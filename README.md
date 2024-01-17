@@ -46,10 +46,6 @@ from splinetlsm.datasets import load_polecat
 Y, time_points, X, node_names, iso_codes, regions, time_labels = load_polecat(
         n_nodes=50)
 
-print(np.where(node_names == 'Ukraine'))
-print(np.where(node_names == 'Russia'))
-# 7 1
-
 Y.shape
 #>>> (259, 50, 50)
 time_points.shape
@@ -57,9 +53,13 @@ time_points.shape
 X.shape
 #>>> (259, 50, 50, 4)
 
-model = SplineDynamicLSM(n_features=6, alpha=0.95).fit(Y, time_points, X, 
-        max_iter=50)
+# initialize a model with d = 6 latent space dimensions
+model = SplineDynamicLSM(n_features=6, alpha=0.95)
 
+# fit the model using SVI with a maximum of 50 iterations
+model.fit(Y, time_points, X, max_iter=50)
+
+# samples from the variational posterior are stored in model.samples_
 # plot coefficient function
 coefs = model.samples_['W_coefs'] @ model.B_fit_.todense()
 coefs = coefs.transpose((0, 2, 1))
@@ -93,8 +93,11 @@ plt.show()
 <img src="images/coefs_n50.png" width="100%" />
 
 ```python
-# plot the latent trajectories of Ukraine and Russia's first coordinate 
+# plot the latent trajectories of Ukraine and Russia's first coordinate
 
+# NOTE: model.U_ is a (n_time_points, n_nodes, n_features) ndarray holding the 
+# variational posterior means of the latent trajectories that have been
+# post-processed using sequential Procrustes rotations.
 u_ukraine = model.U_[:, 7, 0]  # Ukraine is node 7
 u_russia = model.U_[:, 1, 0]   # Russia is node 1
 
