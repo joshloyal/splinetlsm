@@ -59,15 +59,15 @@ plt.show()
 u_ukraine = model.U_[:, 7, 0]  # Ukraine is node 7
 u_russia = model.U_[:, 1, 0]   # Russia is node 1
 
-fig, ax = plt.subplots(figsize=(6, 4))
+fig, ax = plt.subplots(figsize=(12, 4))
 ax.plot(time_points, u_ukraine, linewidth=2, label='Ukraine')
 ax.plot(time_points, u_russia, linestyle='--', linewidth=3, label='Russia')
 ax.set_xticks([i * 52 for i in range(6)])
-ax.set_xticklabels([2018 + i for i in range(6)], fontsize=14)
-ax.tick_params(axis='both', which='major', labelsize=14)
+ax.set_xticklabels([2018 + i for i in range(6)], fontsize=20)
+ax.tick_params(axis='both', which='major', labelsize=20)
 ax.grid(axis='x', lw=2)
-ax.set_xlabel('Year', fontsize=18, fontfamily='Arial')
-ax.set_ylabel('Dimension 1', fontsize=18, fontfamily='arial')
+ax.set_xlabel('Year', fontsize=24, fontfamily='Arial')
+ax.set_ylabel('Dimension 1', fontsize=24, fontfamily='arial')
 ax.legend(fontsize=12)
 
 fig.savefig("ls_n50.png", dpi=600, bbox_inches='tight')
