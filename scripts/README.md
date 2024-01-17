@@ -18,7 +18,7 @@ These commands run the simulations and produce Figure 1 and Figure 2.
 >>> python plot_time.py
 ```
 
-### Section 6.3 (Method Comparison)
+### Section 6.3 (Method Comparison and Appendix G.2)
 
 These commands run the simulations and produces Table 1.
 
@@ -30,7 +30,7 @@ These commands run the simulations and produces Table 1.
 >>> python print_results.py
 ```
 
-### Appendix G (Sensitivity to Subsample Fractions)
+### Appendix G.3 (Sensitivity to Subsample Fractions)
 
 The following commands runs the simulations and produce Figure 7(a).
 
@@ -50,7 +50,7 @@ The following commands runs the simulations and produce Figure 7(b).
 >>> python plot.py
 ```
 
-### Section 7 and Appendix J (Weekly Conflict Networks)
+### Section 7 and Appendix G.4 (Weekly Conflict Networks)
 
 To produce the figures, you will need to run the cells in the corresponding Jupyter notebook:
 
