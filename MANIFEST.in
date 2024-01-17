@@ -1,7 +1,7 @@
 include *.rst
 recursive-include doc *
 recursive-include examples *
-recursive-include splinetlsm/datasets *.csv
+recursive-include splinetlsm/datasets *.csv *.gz *.npy
 include README.rst
 include requirements.txt
 include test_requirements.txt
