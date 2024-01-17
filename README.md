@@ -43,8 +43,7 @@ from splinetlsm.datasets import load_polecat
 
 
 # small version of polecat
-Y, time_points, X, node_names, iso_codes, regions, time_labels = load_polecat(
-        n_nodes=50)
+Y, time_points, X, node_names, iso_codes, regions, time_labels = load_polecat(n_nodes=50)
 
 Y.shape
 #>>> (259, 50, 50)
