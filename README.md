@@ -28,7 +28,7 @@ You need a working installation of numpy, scipy, and Cython to install ``splinet
 >>> git clone https://github.com/joshloyal/splinetlsm.git
 >>> cd splinetlsm
 >>> pip install -r requirements.txt
->>> python setup.py develop
+>>> python setup.py install
 ```
 
 Example
