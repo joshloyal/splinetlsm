@@ -6,7 +6,7 @@
 
 This package provides an interface for the model described in
 "Fast Variational Inference of Latent Space Models for Dynamic Networks using Bayesian P-Splines." Inference is performed using
-stochastic variational inference. For more details, see [Loyal (2023)](https://arxiv.org/abs/2401.09715).
+stochastic variational inference. For more details, see [Loyal (2024)](https://arxiv.org/abs/2401.09715).
 
 Dependencies
 ------------
