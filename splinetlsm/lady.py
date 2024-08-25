@@ -173,6 +173,7 @@ class LadyNetworkModel(object):
         self.probas_ = np.zeros((n_time_points, n_dyads))
         omega = np.zeros((n_time_points, n_nodes, n_nodes))
         dist = np.zeros((n_time_points, n_dyads))
+        #dist = np.zeros((n_time_points, n_nodes, n_nodes))
         
         #intercept, X = initialize_parameters(Y, n_features=self.n_features)
         intercept = rng.randn(n_time_points)
@@ -181,6 +182,7 @@ class LadyNetworkModel(object):
         if self.n_features is not None:
             X = rng.randn(n_nodes, self.n_features, n_time_points)
             sigma_X = np.ones((n_nodes, 2 * self.n_features))
+            #dist = np.einsum('tih,tjh->tij', X, X)
             for t in range(n_time_points):
                 dist[t] = (X[..., t] @ X[..., t].T)[subdiag]
  
@@ -254,7 +256,7 @@ class LadyNetworkModel(object):
                     v = Xv_smoother.simulated_state[1::3].T  # T x n_features
                     z = Xv_smoother.simulated_state[2::3].T
                     
-                    ## sample intercept variances
+                    # sample latent position variances
                     shape = self.prior_variance_shape + 0.5 * (n_time_points - 1)
                     
                     scale = self.prior_variance_scale + 0.5 * np.sum((v[1:] - v[:-1] - z[:-1]) ** 2, axis=0)
