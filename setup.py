@@ -126,11 +126,15 @@ def make_extension(ext_name, macros=[]):
         extra_compile_args=["-O3", "-fPIC", "-std=c++17"],#, '-lm', '-ldl'],
         #extra_link_args=["-fopenmp"],
         define_macros=macros,
+<<<<<<< HEAD
         #libraries=['blas', 'lapack', 'gsl'],
         #libraries=['openblas', 'gsl'],
         libraries=['blas', 'lapack', 'gsl', 'gslcblas'],
         #libraries=['openblas', 'gsl', 'gslcblas'],
         #libraries=['armadillo', 'openblas', 'gsl', 'gslcblas'],
+=======
+        libraries=['blas', 'lapack', 'gsl'],
+>>>>>>> 2943423 (changed requirements)
         library_dirs=library_dirs,
         language='c++')
 
