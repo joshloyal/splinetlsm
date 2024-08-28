@@ -117,7 +117,7 @@ def posterior_predictive(model, rng_key, samples, stat_fun, *model_args,
     return stat_fun(model_trace["Y"]["value"])
 
 
-class SplineDynamicLSM(object):
+class SplineDynamicLSMHMC(object):
     def __init__(self,
                  n_features=10,
                  n_knots=10,
