@@ -32,16 +32,6 @@ def splinelsm(Y, B, n_time_points, n_nodes, n_features=10, train_indices=None,
               is_predictive=False):
     n_knots = B.shape[1]
     
-    # intercept
-    #sigma_intercept = numpyro.sample("sigma_intercept", dist.HalfCauchy(1))
-    #D1 = np.diff(np.eye(n_knots + 1))[1:-1]
-    #D2 = np.diff(np.eye(n_knots + 2), n=2)[2:-2]
-    #R = (D1.T @ D1 + D2.T @ D2)  / sigma_intercept 
-    #R = R.at[0,0].set(R[0,0] + 1)
-    #R = R.at[1,1].set(R[1,1] + 1)
-    #W_intercept = numpyro.sample("W_intercept", 
-    #        dist.MultivariateNormal(precision_matrix=R))
-
     sigma_intercept = numpyro.sample("sigma_intercept", dist.HalfCauchy(1))
     w0_intercept = numpyro.sample("w0_intercept", dist.Normal(0, 1))
     def transition(y_prev, t):

@@ -12,18 +12,18 @@ from splinetlsm.datasets import synthetic_network_mixture
 
 def simulation(seed):
     seed = int(seed)
-    n_nodes = 25
+    n_nodes = 100
     n_time_points = 10
 
     Y, time_points, X, probas, Z, coefs_true, intercept = synthetic_network_mixture(
         n_nodes=n_nodes, n_time_points=n_time_points,
         ls_type='gp',
         include_covariates=True, tau=0.5, sigma=0.5,
-        density=0.2, length_scale=0.2, random_state=1)
+        density=0.2, length_scale=0.2, random_state=seed)
     
     # HMC
-    model = SplineDynamicLSMHMC(n_features=6, alpha=0.95)
-    model.sample(Y, time_points, X, n_warmup=500, n_samples=500)
+    model = SplineDynamicLSMHMC(n_features=6, alpha=0.95, random_state=42)
+    model.sample(Y, time_points, X, n_warmup=2500, n_samples=2500)
     
     # SVI
     svi = SplineDynamicLSM(n_features=6, n_segments='auto',
@@ -101,4 +101,6 @@ def simulation(seed):
 
     data.to_csv(os.path.join(dir_name, out_file), index=False)
 
-simulation(123)
+
+for i in range(50):
+    simulation(i)
