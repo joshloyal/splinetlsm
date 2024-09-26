@@ -18,7 +18,7 @@ These commands run the simulations and produce Figure 1 and Figure 2.
 >>> python plot_time.py
 ```
 
-### Section 6.3 (Method Comparison and Appendix G.2)
+### Section 6.3 (Method Comparison)
 
 These commands run the simulations and produces Table 1.
 
@@ -30,9 +30,20 @@ These commands run the simulations and produces Table 1.
 >>> python print_results.py
 ```
 
+### Appendix G.2 (Comparison of SVI and MCMC Based Credible Intervals)
+
+These commands run the simulations and produces Figures S.1 and S.2.
+
+```bash
+>>> python simulation_mcmc_vi_comparison.pyc
+>>> cd output_mcmc_vi_comparison/
+>>> python process.py
+>>> python plot.py
+```
+
 ### Appendix G.3 (Sensitivity to Subsample Fractions)
 
-The following commands runs the simulations and produce Figure 7(a).
+The following commands runs the simulations and produce Figure S.3(a).
 
 ```bash
 >>> python simulation_nonedge_sensitivity.py
@@ -41,7 +52,7 @@ The following commands runs the simulations and produce Figure 7(a).
 >>> python plot.py
 ```
 
-The following commands runs the simulations and produce Figure 7(b).
+The following commands runs the simulations and produce Figure S.3(b).
 
 ```bash
 >>> python simulation_time_fraction_sensitivity.py
