@@ -25,6 +25,7 @@ These commands run the simulations and produces Table 1.
 ```bash
 >>> python simulation_comparison.py
 >>> python simulation_fase.py
+>>> python simulation_lady.py
 >>> cd output_comparison/
 >>> python process.py
 >>> python print_results.py
