@@ -2,7 +2,7 @@ import numpy as np
 
 from scipy.special import expit
 from scipy.optimize import root_scalar
-from sklearn.gaussian_process.kernels import RBF 
+from sklearn.gaussian_process.kernels import RBF, Matern 
 from sklearn.utils import check_random_state
 from numpyro.distributions.util import vec_to_tril_matrix
 
@@ -26,6 +26,27 @@ def generate_gp(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.
     U = tau * rng.multivariate_normal(
             mean=np.zeros(n_time_points), cov=cov, size=(n_nodes, n_features))
     U = U.transpose((2, 0, 1))
+    
+    return U
+
+def generate_ou(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.25, random_state=None):
+    rng = check_random_state(random_state)
+    
+    # Absolute Exponential Kernel, e.g., OU Process
+    n_time_points = time_points.shape[0]
+    cov = Matern(length_scale=length_scale, nu=0.5)(time_points.reshape(-1, 1))
+    U = tau * rng.multivariate_normal(
+            mean=np.zeros(n_time_points), cov=cov, size=(n_nodes, n_features))
+    U = U.transpose((2, 0, 1))
+    
+    return U
+
+def generate_change_point(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.25, random_state=None):
+    rng = check_random_state(random_state)
+    
+    # RBF GP
+    n_time_points = time_points.shape[0]
+    U = tau * np.repeat(rng.randn(n_nodes, n_features)[None], n_time_points, axis=0)
     
     return U
 
@@ -76,11 +97,11 @@ def synthetic_network(n_nodes=50, n_time_points=20, n_features=2, intercept=-4,
     
     if ls_type == 'bspline':
         U = generate_bspline(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             tau=tau, sigma=sigma, random_state=rng)
     else:
         U = generate_gp(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             length_scale=length_scale, tau=tau, 
             random_state=rng)
     
@@ -129,18 +150,41 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
         U = generate_bspline(
             time_points, n_nodes=n_nodes, n_features=2, 
             tau=tau, sigma=sigma, random_state=rng)
+    elif ls_type == 'ou':
+        U = generate_ou(
+            time_points, n_nodes=n_nodes, n_features=2, 
+            tau=tau, random_state=rng)
+    elif ls_type == 'change_point':
+        U = generate_change_point(
+            time_points, n_nodes=n_nodes, n_features=2, 
+            tau=tau, random_state=rng)
     else:
         U = generate_gp(
             time_points, n_nodes=n_nodes, n_features=2, 
             length_scale=length_scale, tau=tau, random_state=rng)
  
     # latent space
-    centers = np.array([[1.5, 0],
-                        [-1.5, 0],
-                        [0., 1.]])
-    z = rng.choice([0, 1, 2], size=n_nodes)
-    for t in range(n_time_points):
-        U[t] += centers[z]
+    if ls_type != 'change_point':
+        centers = np.array([[1.5, 0],
+                            [-1.5, 0],
+                            [0., 1.]])
+        z = rng.choice([0, 1, 2], size=n_nodes)
+        for t in range(n_time_points):
+            U[t] += centers[z]
+    else:
+        centers = np.array([[1, 0],
+                            [-1, 0]])
+        z = rng.choice([0, 1], size=n_nodes)
+        for t in range(int(n_time_points/2)):
+            U[t] += centers[z]
+        
+        
+        # 10% of dyads flip at t = m/2 
+        ids = rng.choice(
+                np.arange(n_nodes), size=int(0.1 * n_nodes), replace=False)
+        z[ids] = 1 - z[ids]
+        for t in range(int(n_time_points/2), n_time_points):
+            U[t] += centers[z]
     
     # covariates
     n_dyads = int(0.5 * n_nodes * (n_nodes - 1))
@@ -174,4 +218,4 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
         y_vec = rng.binomial(1, probas[t]) 
         Y[t] = tril_vec_to_matrix(y_vec)
 
-    return Y, time_points, X, probas, U, coefs, intercept
+    return Y, time_points, X, probas, U, coefs, intercept, z
