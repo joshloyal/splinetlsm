@@ -29,12 +29,12 @@ def generate_gp(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.
     
     return U
 
-def generate_ou(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.25, random_state=None):
+def generate_matern(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.25, nu=0.5, random_state=None):
     rng = check_random_state(random_state)
     
-    # Absolute Exponential Kernel, e.g., OU Process
+    # Absolute Exponential Kernel, e.g., OU Process is nu = 0.5
     n_time_points = time_points.shape[0]
-    cov = Matern(length_scale=length_scale, nu=0.5)(time_points.reshape(-1, 1))
+    cov = Matern(length_scale=length_scale, nu=nu)(time_points.reshape(-1, 1))
     U = tau * rng.multivariate_normal(
             mean=np.zeros(n_time_points), cov=cov, size=(n_nodes, n_features))
     U = U.transpose((2, 0, 1))
@@ -141,7 +141,7 @@ def find_intercept(logits, target_density):
 
 def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25, 
         include_covariates=False, ls_type='bspline',
-        tau=0.25, sigma=0.25, length_scale=0.2, random_state=42):
+        tau=0.25, sigma=0.25, length_scale=0.2, nu=0.5, random_state=42):
     
     rng = check_random_state(random_state)
     time_points = np.arange(n_time_points) / (n_time_points - 1) 
@@ -150,9 +150,9 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
         U = generate_bspline(
             time_points, n_nodes=n_nodes, n_features=2, 
             tau=tau, sigma=sigma, random_state=rng)
-    elif ls_type == 'ou':
-        U = generate_ou(
-            time_points, n_nodes=n_nodes, n_features=2, 
+    elif ls_type == 'matern':
+        U = generate_matern(
+            time_points, n_nodes=n_nodes, n_features=2, nu=nu,
             tau=tau, random_state=rng)
     elif ls_type == 'change_point':
         U = generate_change_point(
