@@ -62,9 +62,20 @@ def generate_gp_coefs(time_points, n_covariates=2, length_scale=0.2, tau=0.1, ra
     
     return U.T
 
+def generate_matern_coefs(time_points, n_covariates=2, length_scale=0.2, tau=0.1, nu=0.5, random_state=None):
+    rng = check_random_state(random_state)
+    
+    # RBF GP
+    n_time_points = time_points.shape[0]
+    cov = Matern(length_scale=length_scale, nu=nu)(time_points.reshape(-1, 1))
+    U = tau * rng.multivariate_normal(
+            mean=np.zeros(n_time_points), cov=cov, size=(n_covariates,))
+    
+    return U.T
+
 
 def generate_bspline(time_points, 
-        n_nodes=100, n_features=2, n_segments=11, degree=3, 
+        n_nodes=100, n_features=2, n_segments=4, degree=3, 
         tau=4, sigma=0.1, random_state=None):
     rng = check_random_state(random_state)
     
@@ -72,10 +83,10 @@ def generate_bspline(time_points,
         time_points, n_segments=n_segments, degree=degree, return_sparse=False)
      
     # Gaussian Random-Walk
-    W0 = rng.randn(n_nodes, n_features, 1)
-    W = W0 + np.cumsum(
-            sigma * rng.randn(n_nodes, n_features, B.shape[0]), 
-            axis=-1)
+    W = rng.randn(n_nodes, n_features, B.shape[0])
+    #W = W0 + np.cumsum(
+    #        sigma * rng.randn(n_nodes, n_features, B.shape[0]), 
+    #        axis=-1)
 
     return tau * (W @ B).transpose((2, 0, 1))
 
@@ -194,10 +205,16 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
             x = rng.randn(n_dyads)
             for t in range(n_time_points):
                 X[t, ..., p] = vec_to_adjacency(x)
-        coefs = np.array([1., -1.]) + generate_gp_coefs(
-                time_points, n_covariates=2, 
-                length_scale=length_scale, tau=tau,
-                random_state=rng) 
+        if ls_type == 'matern':
+            coefs = np.array([1., -1.]) + generate_matern_coefs(
+                    time_points, n_covariates=2, 
+                    length_scale=length_scale, nu=nu, tau=tau,
+                    random_state=rng) 
+        else:
+            coefs = np.array([1., -1.]) + generate_gp_coefs(
+                    time_points, n_covariates=2, 
+                    length_scale=length_scale, tau=tau,
+                    random_state=rng) 
     else:
         X = None
         coefs = None
