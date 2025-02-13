@@ -6,7 +6,7 @@ import scipy.sparse as sp
 from jax import random, vmap
 from numpyro.contrib.control_flow import scan
 from math import ceil
-from jax.scipy.special import expit
+from jax.scipy.special import expit, logsumexp
 from sklearn.metrics import roc_auc_score
 from sklearn.utils import check_random_state
 
@@ -28,7 +28,7 @@ def predict_proba_param(X, U, intercept, coefs):
     
     return np.vstack(probas)
 
-
+    
 def predict_proba_sample(samples, X, B):
     n_nodes = samples['W'].shape[0]
     n_time_points = B.shape[-1]
@@ -52,6 +52,31 @@ def predict_proba_sample(samples, X, B):
     _, probas = scan(probas_fun, U, jnp.arange(n_time_points))
 
     return probas
+
+
+def predict_loglik_sample(samples, y_vec, X, B):
+    n_nodes = samples['W'].shape[0]
+    n_time_points = B.shape[-1]
+    
+    # calculate latent positions and coeficients
+    U = samples['W'] @ B
+    intercept = samples['W_intercept'] @ B
+
+    if X is not None:
+        coefs = samples['W_coefs'] @ B
+
+    # calculate likelihood
+    subdiag = jnp.tril_indices(n_nodes, k=-1)
+    def logits_fun(carry, t):
+        U = carry
+        logits = intercept[t] + (U[..., t] @ U[..., t].T)[subdiag]
+        if X is not None:
+            logits += (X[t] @ coefs[..., t])[subdiag]
+        return U, dist.Bernoulli(logits=logits).log_prob(y_vec[t])
+
+    _, loglik = scan(logits_fun, U, jnp.arange(n_time_points))
+
+    return loglik
 
 
 def posterior_predictive(rng_key, samples, stat_fun, X, B):
@@ -166,6 +191,7 @@ class SplineDynamicLSM(object):
     def __init__(self,
                  n_features=2,
                  n_segments='auto',
+                 n_segments_scale_factor=1.,
                  degree=3,
                  clamped=False,
                  coefs_penalty_order=1,
@@ -181,6 +207,7 @@ class SplineDynamicLSM(object):
                  random_state=42):
         self.n_features = n_features
         self.n_segments = n_segments
+        self.n_segments_scale_factor = n_segments_scale_factor
         self.degree = degree
         self.clamped = clamped
         self.coefs_penalty_order = coefs_penalty_order
@@ -263,6 +290,8 @@ class SplineDynamicLSM(object):
         if self.n_segments == 'auto':
             self.n_segments_ = max(5, min(
                     ceil((n_nodes * n_time_steps) ** 0.2) + 1, 36))
+            self.n_segments_ = min(ceil(
+                    self.n_segments_scale_factor * self.n_segments_), n_time_steps)
         else:
             self.n_segments_ = self.n_segments
         
@@ -398,6 +427,29 @@ class SplineDynamicLSM(object):
                 X, jnp.array(self.B_fit_.todense()))
             )(self.samples_).mean(axis=0)
     
+    def waic(self):
+        n_time_points = len(self.Y_fit_)
+        n_samples = self.samples_['W'].shape[0]
+        X = None if self.X_fit_ is None else jnp.array(self.X_fit_)
+            
+        
+        # convert Y_fit to a vector
+        subdiag = np.tril_indices_from(self.Y_fit_[0].toarray(), k=-1)
+        y_vec = []
+        for t in range(n_time_points):
+            y_vec.append(self.Y_fit_[t].toarray()[subdiag])
+        y_vec = jnp.array(np.vstack(y_vec))
+
+        loglik = vmap(
+            lambda samples : predict_loglik_sample(samples, 
+                y_vec, X, jnp.array(self.B_fit_.todense()))
+            )(self.samples_)
+    
+        lppd = (logsumexp(loglik, axis=0) - jnp.log(n_samples)).sum()
+        p_waic = loglik.var(axis=0).sum()
+        return float(-2 * (lppd - p_waic))
+    
+
     def posterior_predictive(self, stat_fun, chunk_size=None, random_state=42):
         if chunk_size is not None:
             return self._chunked_posterior_predictive(
