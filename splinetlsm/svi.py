@@ -3,6 +3,7 @@ import jax.numpy as jnp
 import numpyro.distributions as dist
 import scipy.sparse as sp
 
+from graspologic.embed import select_dimension
 from jax import random, vmap
 from numpyro.contrib.control_flow import scan
 from math import ceil
@@ -387,6 +388,14 @@ class SplineDynamicLSM(object):
         # calculate in-sample AUC
         self.probas_ = self.predict_proba()
         self.auc_ = calculate_auc(self.Y_fit_, self.probas_)
+
+        # estimate number of dimensions based on singular values 
+        # of [U_1 | U_2 | ... | U_m] \in R^{nm x d} (row concatenation)
+        elbows, _ = select_dimension(
+            self.U_.reshape(np.prod(self.U_.shape[:2]), -1), 
+            n_components=self.n_features - 1,
+            n_elbows=1, return_likelihoods=False)
+        self.n_features_ = elbows[0]
         
         return self
     
