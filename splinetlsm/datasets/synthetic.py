@@ -177,14 +177,21 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
  
     # latent space
     if ls_type != 'change_point':
-        centers = np.array([[1.5, 0],
-                            [-1.5, 0],
-                            [0., 1.]])
-
-        # pad centers with zeros if d > 2
-        if n_features > 2:
-            centers = np.pad(centers, ((0,0), (0, n_features - 2)))
-        z = rng.choice([0, 1, 2], size=n_nodes)
+        if n_features == 2:
+            centers = np.array([[1.5, 0],
+                                [-1.5, 0],
+                                [0., 1.]])
+            z = rng.choice([0, 1, 2], size=n_nodes)
+        else: 
+            centers = np.array([[1.25, 0, 0, 0],
+                                [0, -1.25, 0, 0],
+                                [0, 0, 0., 1.25],
+                                [0, 0, -1.25, 0]])
+            # pad centers with zeros if d > 2
+            #if n_features > 2:
+            #    centers = np.pad(centers, ((0,0), (0, n_features - 2)))
+            #z = rng.choice([0, 1, 2], size=n_nodes)
+            z = rng.choice([0, 1, 2, 3], size=n_nodes)
         for t in range(n_time_points):
             U[t] += centers[z]
     else:
