@@ -152,26 +152,27 @@ def find_intercept(logits, target_density):
 
 def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25, 
         include_covariates=False, ls_type='bspline',
-        tau=0.25, sigma=0.25, length_scale=0.2, nu=0.5, random_state=42):
+        tau=0.25, sigma=0.25, length_scale=0.2, nu=0.5, 
+        n_features=2, random_state=42):
     
     rng = check_random_state(random_state)
     time_points = np.arange(n_time_points) / (n_time_points - 1) 
     
     if ls_type == 'bspline':
         U = generate_bspline(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             tau=tau, sigma=sigma, random_state=rng)
     elif ls_type == 'matern':
         U = generate_matern(
-            time_points, n_nodes=n_nodes, n_features=2, nu=nu,
+            time_points, n_nodes=n_nodes, n_features=n_features, nu=nu,
             tau=tau, random_state=rng)
     elif ls_type == 'change_point':
         U = generate_change_point(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             tau=tau, random_state=rng)
     else:
         U = generate_gp(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             length_scale=length_scale, tau=tau, random_state=rng)
  
     # latent space
@@ -179,6 +180,10 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
         centers = np.array([[1.5, 0],
                             [-1.5, 0],
                             [0., 1.]])
+
+        # pad centers with zeros if d > 2
+        if n_features > 2:
+            centers = np.pad(centers, ((0,0), (0, n_features - 2)))
         z = rng.choice([0, 1, 2], size=n_nodes)
         for t in range(n_time_points):
             U[t] += centers[z]
