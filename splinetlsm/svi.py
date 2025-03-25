@@ -278,7 +278,7 @@ class SplineDynamicLSM(object):
         self.time_max_ = np.max(time_points)
         self.time_points_ = ((time_points - self.time_min_) / 
             (self.time_max_ - self.time_min_))
-
+        
         n_time_steps = self.time_points_.shape[0]
         n_nodes = Y[0].shape[0]
         

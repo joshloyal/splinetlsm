@@ -153,7 +153,7 @@ def find_intercept(logits, target_density):
 def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25, 
         include_covariates=False, ls_type='bspline',
         tau=0.25, sigma=0.25, length_scale=0.2, nu=0.5, 
-        n_features=2, random_state=42):
+        n_features=2, intercept_value=None, random_state=42):
     
     rng = check_random_state(random_state)
     time_points = np.arange(n_time_points) / (n_time_points - 1) 
@@ -241,10 +241,12 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
         eta = (U[t] @ U[t].T)[subdiag]
         if include_covariates:
             eta += (X[t] @ coefs[t])[subdiag]
-        intercept[t] = find_intercept(eta, target_density=density)
+        if intercept_value:
+            intercept[t] = intercept_value
+        else:
+            intercept[t] = find_intercept(eta, target_density=density)
 
         probas[t] = expit(eta + intercept[t])
         y_vec = rng.binomial(1, probas[t]) 
         Y[t] = tril_vec_to_matrix(y_vec)
-
     return Y, time_points, X, probas, U, coefs, intercept, z
