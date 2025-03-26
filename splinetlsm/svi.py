@@ -395,7 +395,9 @@ class SplineDynamicLSM(object):
             self.U_.reshape(np.prod(self.U_.shape[:2]), -1), 
             n_components=self.n_features - 1,
             n_elbows=1, return_likelihoods=False)
-        self.n_features_ = elbows[0]
+        
+        # elbows will be known if no elbow detected, so set to max features
+        self.n_features_ = elbows[0] if elbows else self.n_features
         
         return self
     
