@@ -208,7 +208,7 @@ class SplineDynamicLSM(object):
                  random_state=42):
         self.n_features = n_features
         self.n_segments = n_segments
-        self.n_segments_scale_factor = n_segments_scale_factor
+        self.n_knots_scale_factor = n_knots_scale_factor
         self.degree = degree
         self.clamped = clamped
         self.coefs_penalty_order = coefs_penalty_order
@@ -289,10 +289,11 @@ class SplineDynamicLSM(object):
             self.n_time_points_ = min(n_time_points, n_time_steps)
         
         if self.n_segments == 'auto':
-            self.n_segments_ = max(5, min(
-                    ceil((n_nodes * n_time_steps) ** 0.2) + 1, 36))
-            self.n_segments_ = min(ceil(
-                    self.n_segments_scale_factor * self.n_segments_), n_time_steps)
+            #self.n_segments_ = max(5, min(
+            #        ceil((n_nodes * n_time_steps) ** 0.2) + 1, 36))
+            #self.n_segments_ = min(ceil(
+            #        self.n_segments_scale_factor * self.n_segments_), n_time_steps)
+            self.n_segments_ = max(5, ceil(self.n_knots_scale_factor * (n_nodes * n_time_steps) ** 0.2) + 1)
         else:
             self.n_segments_ = self.n_segments
         
@@ -438,9 +439,12 @@ class SplineDynamicLSM(object):
                 X, jnp.array(self.B_fit_.todense()))
             )(self.samples_).mean(axis=0)
     
-    def waic(self):
+    def waic(self, chunk_size=None, n_samples=None):
         n_time_points = len(self.Y_fit_)
-        n_samples = self.samples_['W'].shape[0]
+        n_samples = self.samples_['W'].shape[0] if n_samples is None else n_samples
+        if n_samples > self.samples_['W'].shape[0]:
+            n_samples = self.samples['W'].shape[0]
+
         X = None if self.X_fit_ is None else jnp.array(self.X_fit_)
             
         
@@ -449,12 +453,32 @@ class SplineDynamicLSM(object):
         y_vec = []
         for t in range(n_time_points):
             y_vec.append(self.Y_fit_[t].toarray()[subdiag])
-        y_vec = jnp.array(np.vstack(y_vec))
+        y_vec = jnp.array(np.vstack(y_vec)) 
+        B = jnp.array(self.B_fit_.todense())
 
-        loglik = vmap(
-            lambda samples : predict_loglik_sample(samples, 
-                y_vec, X, jnp.array(self.B_fit_.todense()))
-            )(self.samples_)
+        if chunk_size is not None:
+            out = []
+            n_chunks = ceil(n_samples / chunk_size)
+            for idx in range(n_chunks):
+                start = idx * chunk_size
+                end = start + chunk_size
+                chunked_samples = {
+                        k: v[start:end] for (k, v) in self.samples_.items()
+                }
+                if chunk_size > 1:
+                    out.append(vmap(
+                        lambda samples : predict_loglik_sample(samples, 
+                            y_vec, X, B)
+                        )(chunked_samples))
+                else:
+                    out.append(predict_loglik_sample(
+                        chunked_samples, y_vec, X, B))
+
+                loglik = np.vstack(out)
+        else:
+            loglik = vmap(
+                lambda samples : predict_loglik_sample(samples, 
+                    y_vec, X, B))(self.samples_)
     
         lppd = (logsumexp(loglik, axis=0) - jnp.log(n_samples)).sum()
         p_waic = loglik.var(axis=0).sum()

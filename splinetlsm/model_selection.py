@@ -8,12 +8,13 @@ from joblib import Parallel, delayed
 def fit_model(base_model, Y, time_points, X, scale_factor, **fit_args):
     # copy model and set scale factor for knots
     model = copy.deepcopy(base_model)
-    model.n_segments_scale_factor = scale_factor
+    model.n_knots_scale_factor = scale_factor
 
     # fit the model
     model.fit(Y, time_points, X=X, **fit_args)
 
     return model, model.B_fit_.shape[0], model.waic()
+
 
 def select_knots(base_model, Y, time_points, X, scale_factors=[1, 2, 3, 4, 5], 
                  n_jobs=1, **fit_args):
