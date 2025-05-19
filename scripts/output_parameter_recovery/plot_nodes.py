@@ -37,7 +37,6 @@ ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
 sns.lineplot(x='n_nodes', y='total_coefs_rmse', hue='Expected Density', style='Expected Density', data = data, marker='o', ax=ax[1],
         errorbar='sd')
 ax[1].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
-#ax[1].set_title('$M = 100$\nCoefficients [$\\beta(t)$]', fontsize=titlesize)
 ax[1].set_title(r'Coefficients [$\beta(t)$]', fontsize=titlesize)
 ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
 
@@ -52,3 +51,57 @@ for a in ax:
     plt.setp(a.get_legend().get_texts(), fontsize=fontsize)
 
 fig.savefig('recovery_nodes.pdf', dpi=300, bbox_inches='tight')
+
+fig, ax = plt.subplots(figsize=(15, 3), ncols=3, sharey=True)
+
+sns.lineplot(x='n_nodes', y='U_rmse', hue='Expected Density', style='Expected Density', data = data, marker='o', ax=ax[0],
+        errorbar='sd')
+ax[0].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
+ax[0].set_ylabel('RMSE', fontsize=fontsize)
+ax[0].set_title('Latent Positions [$U_{1:2}(t)$]', fontsize=titlesize)
+ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
+
+sns.lineplot(x='n_nodes', y='U_rmse_select', hue='Expected Density', style='Expected Density', data = data, marker='o', ax=ax[1],
+        errorbar='sd')
+ax[1].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
+ax[1].set_title('Selected Latent Positions [$U_{1:\max(\hat{d}_0, 2)}(t)$]', fontsize=titlesize)
+ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
+
+sns.lineplot(x='n_nodes', y='U_rmse_all', hue='Expected Density', style='Expected Density', data = data, marker='o', ax=ax[2],
+        errorbar='sd')
+ax[2].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
+ax[2].set_title('All Latent Positions [$U(t)$]', fontsize=titlesize)
+ax[2].tick_params(axis='both', which='major', labelsize=fontsize)
+
+for a in ax:
+    plt.setp(a.get_legend().get_title(), fontsize=fontsize)
+    plt.setp(a.get_legend().get_texts(), fontsize=fontsize)
+
+fig.savefig('ls_recovery_nodes.pdf', dpi=300, bbox_inches='tight')
+
+fig, ax = plt.subplots(figsize=(15, 3), ncols=3, sharey=True)
+
+sns.lineplot(x='n_nodes', y='proc_corr', hue='Expected Density', style='Expected Density', data = data, marker='o', ax=ax[0],
+        errorbar='sd')
+ax[0].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
+ax[0].set_ylabel('Procrustes Correlation', fontsize=fontsize)
+ax[0].set_title('Latent Positions [$U_{1:2}(t)$]', fontsize=titlesize)
+ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
+
+sns.lineplot(x='n_nodes', y='proc_corr_select', hue='Expected Density', style='Expected Density', data = data, marker='o', ax=ax[1],
+        errorbar='sd')
+ax[1].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
+ax[1].set_title('Selected Latent Positions [$U_{1:\max(\hat{d}_0, 2)}(t)$]', fontsize=titlesize)
+ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
+
+sns.lineplot(x='n_nodes', y='proc_corr_all', hue='Expected Density', style='Expected Density', data = data, marker='o', ax=ax[2],
+        errorbar='sd')
+ax[2].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
+ax[2].set_title('All Latent Positions [$U(t)$]', fontsize=titlesize)
+ax[2].tick_params(axis='both', which='major', labelsize=fontsize)
+
+for a in ax:
+    plt.setp(a.get_legend().get_title(), fontsize=fontsize)
+    plt.setp(a.get_legend().get_texts(), fontsize=fontsize)
+
+fig.savefig('ls_proc_corr_recovery_nodes.pdf', dpi=300, bbox_inches='tight')
