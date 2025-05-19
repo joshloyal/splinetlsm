@@ -102,7 +102,7 @@ The following commands run the simulations and produce Figure S.15.
 >>> python plots.py
 ```
 
-### Appendix G.8 (Performance When d < d_0)
+### Appendix G.8 (Performance When $d < d_0$)
 
 The following commands run the simulations, produce Figure S.16, and calculate the percentage that the latent space dimension is saturated.
 
