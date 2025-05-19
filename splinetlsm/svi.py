@@ -192,7 +192,7 @@ class SplineDynamicLSM(object):
     def __init__(self,
                  n_features=2,
                  n_segments='auto',
-                 n_segments_scale_factor=1.,
+                 n_knots_scale_factor=1.,
                  degree=3,
                  clamped=False,
                  coefs_penalty_order=1,
@@ -294,6 +294,7 @@ class SplineDynamicLSM(object):
             #self.n_segments_ = min(ceil(
             #        self.n_segments_scale_factor * self.n_segments_), n_time_steps)
             self.n_segments_ = max(5, ceil(self.n_knots_scale_factor * (n_nodes * n_time_steps) ** 0.2) + 1)
+            self.n_segments_ = min(self.n_segments_, n_time_steps)
         else:
             self.n_segments_ = self.n_segments
         
@@ -392,13 +393,13 @@ class SplineDynamicLSM(object):
 
         # estimate number of dimensions based on singular values 
         # of [U_1 | U_2 | ... | U_m] \in R^{nm x d} (row concatenation)
-        elbows, _ = select_dimension(
+        self.elbows_, _ = select_dimension(
             self.U_.reshape(np.prod(self.U_.shape[:2]), -1), 
             n_components=self.n_features - 1,
-            n_elbows=1, return_likelihoods=False)
+            n_elbows=self.n_features, return_likelihoods=False)
         
         # elbows will be known if no elbow detected, so set to max features
-        self.n_features_ = elbows[0] if elbows else self.n_features
+        self.n_features_ = self.elbows_[0] if self.elbows_ else self.n_features
         
         return self
     

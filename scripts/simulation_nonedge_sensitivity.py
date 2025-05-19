@@ -21,7 +21,7 @@ def simulation(seed, n_nodes=100, n_time_points=100, nonedge_proportion=2, densi
     nonedge_proportion = float(nonedge_proportion)
     density = float(density)
     
-    Y, time_points, X, probas, U, coefs, intercept = synthetic_network_mixture(
+    Y, time_points, X, probas, U, coefs, intercept, z = synthetic_network_mixture(
         n_nodes=n_nodes, n_time_points=n_time_points,
         ls_type='gp', include_covariates=True, length_scale=0.2,
         tau=0.5, sigma=0.5, density=density, random_state=seed)

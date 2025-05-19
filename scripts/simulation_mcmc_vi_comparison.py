@@ -15,7 +15,7 @@ def simulation(seed):
     n_nodes = 100
     n_time_points = 10
 
-    Y, time_points, X, probas, Z, coefs_true, intercept = synthetic_network_mixture(
+    Y, time_points, X, probas, Z, coefs_true, intercept, z = synthetic_network_mixture(
         n_nodes=n_nodes, n_time_points=n_time_points,
         ls_type='gp',
         include_covariates=True, tau=0.5, sigma=0.5,
