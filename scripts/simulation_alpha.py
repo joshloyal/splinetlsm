@@ -14,21 +14,21 @@ from splinetlsm.mcmc import dynamic_adjacency_to_vec
 from splinetlsm.procrustes import longitudinal_procrustes_rotation
 
 
-def simulation(seed, n_nodes=100, n_time_points=100, ls_type='gp',  nu=0.5, density=0.2): 
+def simulation(seed, n_nodes=100, n_time_points=100, density=0.2, alpha=0.95): 
     seed = int(seed)
     n_nodes = int(n_nodes)
     n_time_points = int(n_time_points)
     density = float(density)
-    nu = float(nu)
+    alpha = float(alpha)
     
     Y, time_points, X, probas, U, coefs, intercept, z = synthetic_network_mixture(
-        n_nodes=n_nodes, n_time_points=n_time_points, n_features=2,
-        ls_type=ls_type, include_covariates=True, length_scale=0.2, nu=nu,
+        n_nodes=n_nodes, n_time_points=n_time_points,
+        ls_type='gp', include_covariates=True, length_scale=0.2, 
         tau=0.5, sigma=0.5, density=density, random_state=seed)
     y_true = dynamic_adjacency_to_vec(Y)
 
     model = SplineDynamicLSM(
-        n_features=6, n_segments='auto', alpha=0.95, init_type='usvt', 
+        n_features=6, n_segments='auto', alpha=alpha, init_type='usvt', 
         random_state=4)
     model.fit(Y, time_points, X, 
         n_time_points=0.25, nonedge_proportion=2,
@@ -52,7 +52,8 @@ def simulation(seed, n_nodes=100, n_time_points=100, ls_type='gp',  nu=0.5, dens
     U_padded = np.concatenate([U, np.zeros((U.shape[0], U.shape[1], 4))], axis=2)
     U_pred_all, _ = longitudinal_procrustes_rotation(U_padded, model.U_)
     U_rmse_all = np.sqrt(np.mean((U_padded - U_pred_all)** 2))
-     
+    
+ 
     # dimension selection 
     d_max = max(model.n_features_, 2)
     U_padded_select = U_padded[..., :d_max]
@@ -98,14 +99,13 @@ def simulation(seed, n_nodes=100, n_time_points=100, ls_type='gp',  nu=0.5, dens
         'coefs_rmse': coefs_rmse,
         'intercept_rmse': intercept_rmse,
         'total_coefs_rmse': total_coefs_rmse,
-        'n_iter': model.n_iter_,
-        'n_features': model.n_features_
+        'n_iter': model.n_iter_
     }
     data = pd.DataFrame(data, index=[0])
 
     out_file = f'result_{seed}.csv'
-    dir_base = 'output_smoothness'
-    dir_name = os.path.join(dir_base, 'output', f"{ls_type}_nu{nu}_n{n_nodes}_T{n_time_points}_d{density}")
+    dir_base = 'output_alpha'
+    dir_name = os.path.join(dir_base, 'output', f"a{alpha}_n{n_nodes}_T{n_time_points}_d{density}")
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
@@ -113,6 +113,6 @@ def simulation(seed, n_nodes=100, n_time_points=100, ls_type='gp',  nu=0.5, dens
 
 
 n_reps = 50
-for gp, nu in [('gp', 0.5), ('matern', 2.5), ('matern', 1.5), ('matern', 0.5)]:
+for alpha in [0.8, 0.85, 0.9, 0.95, 0.99]:
     for i in range(n_reps):
-        simulation(seed=i, n_nodes=200, n_time_points=100, ls_type=gp, nu=nu)
+        simulation(seed=i, n_nodes=200, n_time_points=100, density=0.2, alpha=alpha)
