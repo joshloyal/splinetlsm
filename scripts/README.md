@@ -135,7 +135,7 @@ To produce the figures, you will need to run the cells in the corresponding Jupy
 
 In addition, a video of the animated latent space is located at `application_POLECAT/ls_video.mp4`.
 
-### Appendix G.12 (The Effect of Irregularly Spaced Time Points on the Real Data Application)
+### Appendix G.12 (The Effect of Irregularly Spaced Time Points)
 
 To produce the figures, you will need to run the cells in the corresponding Jupyter notebook:
 
