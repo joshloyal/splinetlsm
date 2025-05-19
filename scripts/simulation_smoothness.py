@@ -14,21 +14,17 @@ from splinetlsm.mcmc import dynamic_adjacency_to_vec
 from splinetlsm.procrustes import longitudinal_procrustes_rotation
 
 
-def simulation(seed, n_nodes=100, n_time_points=100, eps='log'): 
+def simulation(seed, n_nodes=100, n_time_points=100, ls_type='gp',  nu=0.5, density=0.2): 
     seed = int(seed)
     n_nodes = int(n_nodes)
     n_time_points = int(n_time_points)
-    if eps != 'log':
-        eps = float(eps)
-        intercept_value = -float(eps) * np.log(n_nodes)
-    else:
-        intercept_value = -np.log(n_nodes) + np.log(np.log(n_nodes))
-
+    density = float(density)
+    nu = float(nu)
     
     Y, time_points, X, probas, U, coefs, intercept, z = synthetic_network_mixture(
-        n_nodes=n_nodes, n_time_points=n_time_points,
-        ls_type='gp', include_covariates=True, length_scale=0.2,
-        tau=0.5, sigma=0.5, intercept_value=intercept_value, random_state=seed)
+        n_nodes=n_nodes, n_time_points=n_time_points, n_features=2,
+        ls_type=ls_type, include_covariates=True, length_scale=0.2, nu=nu,
+        tau=0.5, sigma=0.5, density=density, random_state=seed)
     y_true = dynamic_adjacency_to_vec(Y)
 
     model = SplineDynamicLSM(
@@ -51,12 +47,12 @@ def simulation(seed, n_nodes=100, n_time_points=100, eps='log'):
     # compare smoothed latent positions with a single procrustes transform
     U_pred, _ = longitudinal_procrustes_rotation(U, model.U_[..., :2])
     U_rmse = np.sqrt(np.mean((U - U_pred) ** 2))
-     
+    
     # pad true U matrix with zeros
     U_padded = np.concatenate([U, np.zeros((U.shape[0], U.shape[1], 4))], axis=2)
     U_pred_all, _ = longitudinal_procrustes_rotation(U_padded, model.U_)
     U_rmse_all = np.sqrt(np.mean((U_padded - U_pred_all)** 2))
-    
+     
     # dimension selection 
     d_max = max(model.n_features_, 2)
     U_padded_select = U_padded[..., :d_max]
@@ -72,7 +68,6 @@ def simulation(seed, n_nodes=100, n_time_points=100, eps='log'):
         proc_corr += np.sqrt(1 - procrustes(U[t], model.U_[t, :, :2])[-1]) / n_time_points
         proc_corr_all += np.sqrt(1 - procrustes(U_padded[t], model.U_[t])[-1]) / n_time_points
         proc_corr_select += np.sqrt(1 - procrustes(U_padded_select[t], model.U_[t, :, :d_max])[-1]) / n_time_points
-    
 
     # coefficient estimation
     coefs_rmse = np.sum((model.coefs_ - coefs) ** 2, axis=1)
@@ -104,22 +99,21 @@ def simulation(seed, n_nodes=100, n_time_points=100, eps='log'):
         'intercept_rmse': intercept_rmse,
         'total_coefs_rmse': total_coefs_rmse,
         'n_iter': model.n_iter_,
-        'n_features': model.n_features_,
+        'n_features': model.n_features_
     }
     data = pd.DataFrame(data, index=[0])
 
-    dir_base = 'output_sparsity'
     out_file = f'result_{seed}.csv'
-    dir_name = os.path.join(dir_base, 'output', f"sim_n{n_nodes}_T{n_time_points}_e{eps}")
+    dir_base = 'output_smoothness'
+    dir_name = os.path.join(dir_base, 'output', f"{ls_type}_nu{nu}_n{n_nodes}_T{n_time_points}_d{density}")
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
     data.to_csv(os.path.join(dir_name, out_file), index=False)
 
 
-# NOTE: This is meant to be run in parallel on a computer cluster!
 n_reps = 50
-for density in ['log', 0.5, 0.75]:
-    for n_nodes in [100, 200, 500, 1000]:
-        for i in range(n_reps):
-            simulation(seed=i, n_nodes=n_nodes, n_time_points=100, eps=density)
+for gp, nu in [('gp', 0.5), ('matern', 2.5), ('matern', 1.5), ('matern', 0.5)]:
+    for i in range(n_reps):
+        simulation(seed=i, n_nodes=200, n_time_points=100, ls_type=gp, nu=nu)
+        print(i)
