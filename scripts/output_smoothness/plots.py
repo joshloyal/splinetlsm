@@ -38,14 +38,14 @@ ax[0].get_xaxis().set_ticklabels([])
 
 sns.boxplot(x='nu', y='coefs_rmse', order=label_map.values(), data=data, ax=ax[2], showfliers=False, color=color)
 ax[2].set_xlabel('GP Covariance', fontsize=fontsize)
-ax[2].set_title(r'Coefficients [$\beta_1(t), \beta_2(t)$]', fontsize=titlesize)
+ax[2].set_title(r'Coefficients [$\beta_2(t), \beta_3(t)$]', fontsize=titlesize)
 ax[2].tick_params(axis='y', which='major', labelsize=fontsize)
 ax[2].set_ylabel('RMSE', fontsize=fontsize)
 ax[2].tick_params(axis='x', which='major', labelsize=fontsize)
 
 sns.boxplot(x='nu', y='intercept_rmse', order=label_map.values(), data=data, ax=ax[3], showfliers=False, color=color)
 ax[3].set_xlabel('GP Covariance', fontsize=fontsize)
-ax[3].set_title(r'Intercept [$\beta_0(t)$]', fontsize=titlesize)
+ax[3].set_title(r'Intercept [$\beta_1(t)$]', fontsize=titlesize)
 ax[3].tick_params(axis='y', which='major', labelsize=fontsize)
 ax[3].tick_params(axis='x', which='major', labelsize=fontsize)
 

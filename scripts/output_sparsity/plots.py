@@ -48,7 +48,7 @@ sns.lineplot(x='n_nodes', y='coefs_rmse', hue='Expected Degree', style='Expected
         errorbar='sd', hue_order = ['$O(\log n)$', '$O(n^{1/2})$', '$O(n^{3/4})$'])
 ax[2].set_ylabel('RMSE', fontsize=fontsize)
 ax[2].set_xlabel('Number of Nodes ($n$)', fontsize=fontsize)
-ax[2].set_title(r'Coefficients [$\beta_1(t), \beta_2(t)$]', fontsize=titlesize)
+ax[2].set_title(r'Coefficients [$\beta_2(t), \beta_3(t)$]', fontsize=titlesize)
 ax[2].tick_params(axis='both', which='major', labelsize=fontsize)
 
 
