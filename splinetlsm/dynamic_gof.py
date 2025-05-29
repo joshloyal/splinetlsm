@@ -89,6 +89,19 @@ def nonedge_persistence(y_vec):
     return res
 
 
+def lag1_degree_correlation(y_vec):
+    n_time_steps = y_vec.shape[0]
+
+    def stat_fun(carry, t):
+        return None, sgof.degree(y_vec[t])
+    _, deg = jax.lax.scan(stat_fun, None, jnp.arange(n_time_steps))
+
+    v1 = deg[:-1].ravel()
+    v2 = deg[1:].ravel()
+
+    return jnp.corrcoef(v1, v2)[0, 1]
+
+
 def stat_distribution(stats):
     stat = pd.melt(pd.DataFrame(stats), var_name='t')
     stat['t'] = stat['t'] + 1

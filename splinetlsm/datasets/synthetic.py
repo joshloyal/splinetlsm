@@ -2,7 +2,7 @@ import numpy as np
 
 from scipy.special import expit
 from scipy.optimize import root_scalar
-from sklearn.gaussian_process.kernels import RBF 
+from sklearn.gaussian_process.kernels import RBF, Matern 
 from sklearn.utils import check_random_state
 from numpyro.distributions.util import vec_to_tril_matrix
 
@@ -29,6 +29,27 @@ def generate_gp(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.
     
     return U
 
+def generate_matern(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.25, nu=0.5, random_state=None):
+    rng = check_random_state(random_state)
+    
+    # Absolute Exponential Kernel, e.g., OU Process is nu = 0.5
+    n_time_points = time_points.shape[0]
+    cov = Matern(length_scale=length_scale, nu=nu)(time_points.reshape(-1, 1))
+    U = tau * rng.multivariate_normal(
+            mean=np.zeros(n_time_points), cov=cov, size=(n_nodes, n_features))
+    U = U.transpose((2, 0, 1))
+    
+    return U
+
+def generate_change_point(time_points, n_nodes=100, n_features=2, length_scale=0.2, tau=0.25, random_state=None):
+    rng = check_random_state(random_state)
+    
+    # RBF GP
+    n_time_points = time_points.shape[0]
+    U = tau * np.repeat(rng.randn(n_nodes, n_features)[None], n_time_points, axis=0)
+    
+    return U
+
 
 def generate_gp_coefs(time_points, n_covariates=2, length_scale=0.2, tau=0.1, random_state=None):
     rng = check_random_state(random_state)
@@ -41,9 +62,20 @@ def generate_gp_coefs(time_points, n_covariates=2, length_scale=0.2, tau=0.1, ra
     
     return U.T
 
+def generate_matern_coefs(time_points, n_covariates=2, length_scale=0.2, tau=0.1, nu=0.5, random_state=None):
+    rng = check_random_state(random_state)
+    
+    # RBF GP
+    n_time_points = time_points.shape[0]
+    cov = Matern(length_scale=length_scale, nu=nu)(time_points.reshape(-1, 1))
+    U = tau * rng.multivariate_normal(
+            mean=np.zeros(n_time_points), cov=cov, size=(n_covariates,))
+    
+    return U.T
+
 
 def generate_bspline(time_points, 
-        n_nodes=100, n_features=2, n_segments=11, degree=3, 
+        n_nodes=100, n_features=2, n_segments=4, degree=3, 
         tau=4, sigma=0.1, random_state=None):
     rng = check_random_state(random_state)
     
@@ -51,10 +83,10 @@ def generate_bspline(time_points,
         time_points, n_segments=n_segments, degree=degree, return_sparse=False)
      
     # Gaussian Random-Walk
-    W0 = rng.randn(n_nodes, n_features, 1)
-    W = W0 + np.cumsum(
-            sigma * rng.randn(n_nodes, n_features, B.shape[0]), 
-            axis=-1)
+    W = rng.randn(n_nodes, n_features, B.shape[0])
+    #W = W0 + np.cumsum(
+    #        sigma * rng.randn(n_nodes, n_features, B.shape[0]), 
+    #        axis=-1)
 
     return tau * (W @ B).transpose((2, 0, 1))
 
@@ -76,11 +108,11 @@ def synthetic_network(n_nodes=50, n_time_points=20, n_features=2, intercept=-4,
     
     if ls_type == 'bspline':
         U = generate_bspline(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             tau=tau, sigma=sigma, random_state=rng)
     else:
         U = generate_gp(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             length_scale=length_scale, tau=tau, 
             random_state=rng)
     
@@ -120,27 +152,62 @@ def find_intercept(logits, target_density):
 
 def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25, 
         include_covariates=False, ls_type='bspline',
-        tau=0.25, sigma=0.25, length_scale=0.2, random_state=42):
+        tau=0.25, sigma=0.25, length_scale=0.2, nu=0.5, 
+        n_features=2, intercept_value=None, random_state=42):
     
     rng = check_random_state(random_state)
     time_points = np.arange(n_time_points) / (n_time_points - 1) 
     
     if ls_type == 'bspline':
         U = generate_bspline(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             tau=tau, sigma=sigma, random_state=rng)
+    elif ls_type == 'matern':
+        U = generate_matern(
+            time_points, n_nodes=n_nodes, n_features=n_features, nu=nu,
+            tau=tau, random_state=rng)
+    elif ls_type == 'change_point':
+        U = generate_change_point(
+            time_points, n_nodes=n_nodes, n_features=n_features, 
+            tau=tau, random_state=rng)
     else:
         U = generate_gp(
-            time_points, n_nodes=n_nodes, n_features=2, 
+            time_points, n_nodes=n_nodes, n_features=n_features, 
             length_scale=length_scale, tau=tau, random_state=rng)
  
     # latent space
-    centers = np.array([[1.5, 0],
-                        [-1.5, 0],
-                        [0., 1.]])
-    z = rng.choice([0, 1, 2], size=n_nodes)
-    for t in range(n_time_points):
-        U[t] += centers[z]
+    if ls_type != 'change_point':
+        if n_features == 2:
+            centers = np.array([[1.5, 0],
+                                [-1.5, 0],
+                                [0., 1.]])
+            z = rng.choice([0, 1, 2], size=n_nodes)
+        else: 
+            centers = np.array([[1.25, 0, 0, 0],
+                                [0, -1.25, 0, 0],
+                                [0, 0, 0., 1.25],
+                                [0, 0, -1.25, 0]])
+            # pad centers with zeros if d > 2
+            #if n_features > 2:
+            #    centers = np.pad(centers, ((0,0), (0, n_features - 2)))
+            #z = rng.choice([0, 1, 2], size=n_nodes)
+            z = rng.choice([0, 1, 2, 3], size=n_nodes)
+        for t in range(n_time_points):
+            U[t] += centers[z]
+    else:
+        centers = np.array([[1, 0],
+                            [-1, 0]])
+        z = rng.choice([0, 1], size=n_nodes)
+        for t in range(int(n_time_points/2)):
+            U[t] += centers[z]
+        
+        
+        # 10% of dyads flip at t = m/2 
+        ids = rng.choice(
+                np.arange(n_nodes), size=int(0.1 * n_nodes), replace=False)
+        z[ids] = 1 - z[ids]
+        for t in range(int(n_time_points/2), n_time_points):
+            U[t] += centers[z]
     
     # covariates
     n_dyads = int(0.5 * n_nodes * (n_nodes - 1))
@@ -150,10 +217,16 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
             x = rng.randn(n_dyads)
             for t in range(n_time_points):
                 X[t, ..., p] = vec_to_adjacency(x)
-        coefs = np.array([1., -1.]) + generate_gp_coefs(
-                time_points, n_covariates=2, 
-                length_scale=length_scale, tau=tau,
-                random_state=rng) 
+        if ls_type == 'matern':
+            coefs = np.array([1., -1.]) + generate_matern_coefs(
+                    time_points, n_covariates=2, 
+                    length_scale=length_scale, nu=nu, tau=tau,
+                    random_state=rng) 
+        else:
+            coefs = np.array([1., -1.]) + generate_gp_coefs(
+                    time_points, n_covariates=2, 
+                    length_scale=length_scale, tau=tau,
+                    random_state=rng) 
     else:
         X = None
         coefs = None
@@ -168,10 +241,12 @@ def synthetic_network_mixture(n_nodes=50, n_time_points=20, density=0.25,
         eta = (U[t] @ U[t].T)[subdiag]
         if include_covariates:
             eta += (X[t] @ coefs[t])[subdiag]
-        intercept[t] = find_intercept(eta, target_density=density)
+        if intercept_value:
+            intercept[t] = intercept_value
+        else:
+            intercept[t] = find_intercept(eta, target_density=density)
 
         probas[t] = expit(eta + intercept[t])
         y_vec = rng.binomial(1, probas[t]) 
         Y[t] = tril_vec_to_matrix(y_vec)
-
-    return Y, time_points, X, probas, U, coefs, intercept
+    return Y, time_points, X, probas, U, coefs, intercept, z

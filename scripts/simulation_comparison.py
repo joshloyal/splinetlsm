@@ -21,7 +21,7 @@ def simulation(seed, n_nodes=100, n_time_points=10, density=0.2):
     n_time_points = int(n_time_points)
     density = float(density)
     
-    Y, time_points, X, probas, U, coefs, intercept = synthetic_network_mixture(
+    Y, time_points, X, probas, U, coefs, intercept, z = synthetic_network_mixture(
         n_nodes=n_nodes, n_time_points=n_time_points,
         ls_type='gp', include_covariates=False, length_scale=0.2,
         tau=0.5, sigma=0.5, density=density, random_state=seed)
@@ -41,6 +41,23 @@ def simulation(seed, n_nodes=100, n_time_points=10, density=0.2):
         step_size_power=0.75, step_size_delay=1, tol=1e-3, 
         max_iter=250)
     svi_time = time.time() - t
+
+    t = time.time()
+    models, waics = [], []
+    for k in [0.5, 0.75, 1]:
+        model_k = SplineDynamicLSM(
+            n_features=6, n_segments='auto', alpha=0.95, init_type='usvt', 
+            random_state=4, n_knots_scale_factor=k)
+        model_k.fit(Y, time_points, X, 
+            n_time_points=0.25, nonedge_proportion=2,
+            step_size_power=0.75, step_size_delay=1, tol=1e-3, 
+            max_iter=250)
+        models.append(model_k)
+        waics.append(model_k.waic())
+    svi_tuned_time = time.time() - t
+
+    best_idx = np.argmin(waics)
+    model_tuned = models[best_idx]
     
     data = {
         'density': y_true.mean(),
@@ -51,6 +68,9 @@ def simulation(seed, n_nodes=100, n_time_points=10, density=0.2):
         'auc_svi':  model.auc_,
         'ppc_svi':  pearsonr(probas.ravel(), model.probas_.ravel())[0],
         'logit_svi': np.sqrt(np.mean((logit(probas) - logit(model_gp.probas_)) ** 2)),
+        'auc_svi_tuned': model_tuned.auc_,
+        'ppc_svi_tuned': pearsonr(probas.ravel(), model_tuned.probas_.ravel())[0],
+        'logit_svi_tuned': np.sqrt(np.mean((logit(probas) - logit(model_tuned.probas_)) ** 2)),
         'time_svi': svi_time
     }
     data = pd.DataFrame(data, index=[0])
@@ -69,6 +89,7 @@ n_reps = 50
 
 for density in [0.1, 0.2, 0.3]:
     for i in range(50):
+        print(i)
         simulation(seed=i, n_nodes=100, n_time_points=10, density=density)
 
     for i in range(50):

@@ -80,7 +80,7 @@ tri.indices = upper.tri(proba[,,1])
 pred = c()
 true = c()
 y_vec = c()
-for (t in 1:10) {
+for (t in 1:n_time_points) {
     pred = c(pred, proba[,,t][tri.indices])
     true = c(true, probas[t,])
     y_vec = c(y_vec, A[,,t][tri.indices])
